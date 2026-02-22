@@ -166,6 +166,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAV-04 | Phase 2 | Pending |
 | NAV-05 | Phase 2 | Pending |
 | NAV-06 | Phase 2 | Pending |
+| FOOT-01 | Phase 2 | Pending |
+| FOOT-02 | Phase 2 | Pending |
+| FOOT-03 | Phase 2 | Pending |
+| FOOT-04 | Phase 2 | Pending |
+| FOOT-05 | Phase 2 | Pending |
+| FOOT-06 | Phase 2 | Pending |
 | CHIP-01 | Phase 3 | Pending |
 | CHIP-02 | Phase 3 | Pending |
 | CHIP-03 | Phase 3 | Pending |
@@ -217,18 +223,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTA-03 | Phase 6 | Pending |
 | CTA-04 | Phase 6 | Pending |
 | CTA-05 | Phase 6 | Pending |
-| FOOT-01 | Phase 2 | Pending |
-| FOOT-02 | Phase 2 | Pending |
-| FOOT-03 | Phase 2 | Pending |
-| FOOT-04 | Phase 2 | Pending |
-| FOOT-05 | Phase 2 | Pending |
-| FOOT-06 | Phase 2 | Pending |
 
 **Coverage:**
-- v1 requirements: 58 total
-- Mapped to phases: 58
-- Unmapped: 0 ✓
+- v1 requirements: 68 total
+- Mapped to phases: 68
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-02-22*
-*Last updated: 2025-02-22 after initial definition*
+*Last updated: 2025-02-22 after roadmap creation*
