@@ -3,153 +3,175 @@
 import { useRef } from "react"
 import { gsap, useGSAP } from "@/lib/gsap-config"
 import { motion } from "motion/react"
-import { Brain, Terminal, Clock, Shield, MessageCircle } from "lucide-react"
+import { MessageSquare, Shield, Brain, Terminal } from "lucide-react"
+import Image from "next/image"
 
-const features = [
-  {
-    id: 1,
-    title: "Persistent Memory",
-    description:
-      "Never forgets your preferences, history, or context. Your assistant learns and remembers across every conversation.",
-    icon: Brain,
-    span: "md:col-span-2",
-    highlight: true,
-  },
-  {
-    id: 2,
-    title: "Privacy First",
-    description:
-      "Your data stays local. We never see your conversations or store sensitive information on our servers.",
-    icon: Terminal,
-    span: "",
-    showCode: true,
-  },
-  {
-    id: 3,
-    title: "Always Awake",
-    description:
-      "24/7 availability with 99.9% uptime. No downtime, no waiting, always ready when you need it.",
-    icon: Clock,
-    span: "",
-    pulse: true,
-  },
-  {
-    id: 4,
-    title: "Secure by Default",
-    description:
-      "End-to-end encryption, SOC2 compliant infrastructure, and enterprise-grade security out of the box.",
-    icon: Shield,
-    span: "",
-    badges: ["SOC2", "E2EE", "GDPR"],
-  },
-  {
-    id: 5,
-    title: "Any Messenger",
-    description:
-      "Works with WhatsApp, Telegram, Slack, Discord, and more. Connect where your team already communicates.",
-    icon: MessageCircle,
-    span: "md:col-span-2",
-    platforms: true,
-  },
+// Messaging app colors for floating icons
+const messengerIcons = [
+  { name: "WhatsApp", color: "#25D366", position: "top-4 left-1/2 -translate-x-8" },
+  { name: "Signal", color: "#3A76F0", position: "top-1/3 right-8" },
+  { name: "Telegram", color: "#0088CC", position: "bottom-8 right-12" },
 ]
 
-function FeatureCard({
-  feature,
-}: {
-  feature: (typeof features)[0]
-}) {
-  const Icon = feature.icon
-
+function AnyMessengerCard() {
   return (
     <motion.div
-      className={`feature-card group relative p-6 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all duration-300 ${feature.span}`}
+      className="feature-card bg-white border border-zinc-200 rounded-2xl p-6 relative overflow-hidden md:col-span-2"
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div className="flex items-start gap-6">
+        {/* Left content */}
+        <div className="flex-1 max-w-xs">
+          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center mb-4">
+            <MessageSquare className="w-5 h-5 text-orange-500" strokeWidth={1.5} />
+          </div>
+          <h3 className="font-heading text-xl font-semibold text-zinc-900 mb-2">
+            Any Messenger
+          </h3>
+          <p className="text-sm text-zinc-500 leading-relaxed">
+            WhatsApp, Telegram, Discord, Slack, Signal, iMessage — talk to your assistant wherever you already are.
+          </p>
+        </div>
+
+        {/* Right: Floating messenger icons */}
+        <div className="relative w-48 h-40 hidden md:block">
+          {/* Central message bubble */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <MessageSquare className="w-8 h-8 text-white" strokeWidth={1.5} />
+          </div>
+
+          {/* Floating icons */}
+          {messengerIcons.map((icon, i) => (
+            <motion.div
+              key={icon.name}
+              className={`absolute ${icon.position} w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md`}
+              style={{ backgroundColor: icon.color }}
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+            >
+              {icon.name.slice(0, 2)}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function PrivacyFirstCard() {
+  return (
+    <motion.div
+      className="feature-card bg-white border border-zinc-200 rounded-2xl p-6 relative overflow-hidden"
       whileHover={{ scale: 1.02 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {/* Icon */}
-      <motion.div
-        className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-          feature.highlight
-            ? "bg-[#78350F]/20"
-            : "bg-zinc-800"
-        }`}
-        whileHover={{ rotate: [0, -10, 10, 0] }}
-        transition={{ duration: 0.5 }}
-      >
-        <Icon
-          className={`w-6 h-6 ${
-            feature.highlight
-              ? "text-[#D97706]"
-              : "text-zinc-400 group-hover:text-zinc-200"
-          } transition-colors`}
-          strokeWidth={1.5}
-        />
-        {feature.pulse && (
-          <motion.div
-            className="absolute inset-0 rounded-xl bg-zinc-400/20"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-        )}
-      </motion.div>
-
-      {/* Content */}
-      <h3 className="font-heading text-lg font-semibold text-white mb-2">
-        {feature.title}
+      <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-4">
+        <Shield className="w-5 h-5 text-emerald-500" strokeWidth={1.5} />
+      </div>
+      <h3 className="font-heading text-xl font-semibold text-zinc-900 mb-2">
+        Privacy First
       </h3>
-      <p className="text-zinc-400 text-sm leading-relaxed">
-        {feature.description}
+      <p className="text-sm text-zinc-500 leading-relaxed mb-4">
+        Your data stays private. We don&apos;t log your conversations. Your assistant, your business.
       </p>
 
-      {/* Code Animation for Privacy First */}
-      {feature.showCode && (
-        <div className="mt-4 p-3 rounded-lg bg-zinc-950 border border-zinc-800 font-mono text-xs text-zinc-500 overflow-hidden">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            <span className="text-[#78350F]">encrypted</span>
-            <span className="text-zinc-600">:</span>
-            <span className="text-emerald-500"> true</span>
-          </motion.div>
+      {/* Terminal mockup */}
+      <div className="bg-zinc-50 rounded-lg p-3 border border-zinc-100">
+        <div className="flex items-center gap-1.5 mb-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="w-2 h-2 rounded-full bg-emerald-400" />
         </div>
-      )}
+        <div className="flex items-center justify-between">
+          <code className="text-xs text-zinc-500 font-mono">LOGGING DISABLED...</code>
+          <div className="w-6 h-6 rounded border border-zinc-200 flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
-      {/* Badges for Secure by Default */}
-      {feature.badges && (
-        <div className="mt-4 flex items-center gap-2">
-          {feature.badges.map((badge) => (
-            <span
-              key={badge}
-              className="px-2 py-1 text-xs bg-zinc-800 rounded text-zinc-400 border border-zinc-700"
-            >
-              {badge}
-            </span>
-          ))}
-        </div>
-      )}
+function PersistentMemoryCard() {
+  return (
+    <motion.div
+      className="feature-card bg-white border border-zinc-200 rounded-2xl p-6 relative overflow-hidden"
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-4">
+        <Brain className="w-5 h-5 text-amber-600" strokeWidth={1.5} />
+      </div>
+      <h3 className="font-heading text-xl font-semibold text-zinc-900 mb-2">
+        Persistent Memory
+      </h3>
+      <p className="text-sm text-zinc-500 leading-relaxed mb-4">
+        Your preferences, context, and past conversations are remembered instantly.
+      </p>
 
-      {/* Platform Icons for Any Messenger */}
-      {feature.platforms && (
-        <div className="mt-4 flex items-center gap-3">
-          {["WhatsApp", "Telegram", "Slack", "Discord"].map((platform, i) => (
-            <motion.div
-              key={platform}
-              className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * i }}
-              whileHover={{ scale: 1.1, y: -2 }}
-            >
-              <span className="text-xs text-zinc-500 font-medium">
-                {platform.slice(0, 2)}
-              </span>
-            </motion.div>
-          ))}
-          <span className="text-xs text-zinc-500">+10 more</span>
+      {/* Memory cards */}
+      <div className="space-y-2">
+        <div className="bg-amber-50 rounded-lg p-3 border-l-2 border-amber-400">
+          <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5">Last Conversation</p>
+          <p className="text-sm text-zinc-700 font-medium">&quot;Book flight to Tokyo...&quot;</p>
         </div>
-      )}
+        <div className="bg-zinc-50 rounded-lg p-3 border-l-2 border-zinc-300">
+          <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5">User Preference</p>
+          <p className="text-sm text-zinc-600">Vegetarian meal plan</p>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+function SystemAccessCard() {
+  return (
+    <motion.div
+      className="feature-card bg-white border border-zinc-200 rounded-2xl p-6 relative overflow-hidden md:col-span-2"
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div className="flex items-start gap-6">
+        {/* Left content */}
+        <div className="flex-1">
+          <div className="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center mb-4">
+            <Terminal className="w-5 h-5 text-zinc-600" strokeWidth={1.5} />
+          </div>
+          <h3 className="font-heading text-xl font-semibold text-zinc-900 mb-2">
+            System Access
+          </h3>
+          <p className="text-sm text-zinc-500 leading-relaxed">
+            Full access to files, shell commands, and scripts. It can do anything you could do at your computer.
+          </p>
+        </div>
+
+        {/* Right: Terminal mockup */}
+        <div className="hidden md:block flex-shrink-0 w-64">
+          <div className="bg-zinc-900 rounded-lg overflow-hidden">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            </div>
+            <div className="p-3 font-mono text-xs space-y-1">
+              <p className="text-zinc-400">$ clawi access --level=root</p>
+              <p className="text-emerald-400">Access granted.</p>
+              <p className="text-zinc-400">$ run daily_report.py</p>
+              <p className="text-amber-400">Generating report...</p>
+              <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden mt-2">
+                <motion.div
+                  className="h-full bg-emerald-500"
+                  initial={{ width: "0%" }}
+                  animate={{ width: "70%" }}
+                  transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </motion.div>
   )
 }
@@ -161,9 +183,8 @@ export function FeaturesSection() {
     () => {
       if (!containerRef.current) return
 
-      // Staggered fade-in for all feature cards
-      gsap.fromTo(".feature-card",
-        { opacity: 0, y: 40 },
+      gsap.fromTo(".features-header",
+        { opacity: 0, y: 30 },
         {
           scrollTrigger: {
             trigger: containerRef.current,
@@ -171,23 +192,22 @@ export function FeaturesSection() {
           },
           opacity: 1,
           y: 0,
-          stagger: 0.1,
           duration: 0.6,
           ease: "power2.out",
         }
       )
 
-      // Header animation
-      gsap.fromTo(".features-header",
-        { opacity: 0, y: 20 },
+      gsap.fromTo(".feature-card",
+        { opacity: 0, y: 30 },
         {
           scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top 85%",
+            trigger: ".features-grid",
+            start: "top 80%",
           },
           opacity: 1,
           y: 0,
-          duration: 0.6,
+          stagger: 0.1,
+          duration: 0.5,
           ease: "power2.out",
         }
       )
@@ -199,27 +219,43 @@ export function FeaturesSection() {
     <section
       ref={containerRef}
       id="features"
-      className="relative py-24 px-6 bg-zinc-950"
+      className="relative py-24 px-6 bg-[#FAFAF9]"
     >
       <div className="max-w-5xl mx-auto">
         {/* Section Header */}
-        <div className="features-header text-center mb-16">
-          <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
-            Features
-          </p>
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white mb-4">
-            Built for Modern Teams
-          </h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
-            Powerful features that help you work smarter, not harder. Everything you need to deploy your AI assistant.
-          </p>
+        <div className="features-header flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+          <div>
+            <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-2">
+              What You Get
+            </p>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-zinc-900">
+              Everything in one install
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/images/making-coffee.gif"
+              alt="Making coffee"
+              width={80}
+              height={80}
+              className="rounded-lg"
+              unoptimized
+            />
+            <p className="text-zinc-500 max-w-xs text-sm">
+              OpenClaw, ClawdBot, and MoltBot — configured and connected. No terminal commands.
+            </p>
+          </div>
         </div>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {features.map((feature) => (
-            <FeatureCard key={feature.id} feature={feature} />
-          ))}
+        {/* Features Bento Grid */}
+        <div className="features-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Top row */}
+          <AnyMessengerCard />
+          <PrivacyFirstCard />
+
+          {/* Bottom row */}
+          <PersistentMemoryCard />
+          <SystemAccessCard />
         </div>
       </div>
     </section>

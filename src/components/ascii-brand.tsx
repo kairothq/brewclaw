@@ -146,9 +146,10 @@ export function AsciiBrand() {
                     className="ascii-char"
                     style={{
                       textShadow: isShimmering
-                        ? `0 0 ${8 * intensity}px rgba(255,255,255,${0.8 * intensity}), 0 0 ${16 * intensity}px rgba(255,255,255,${0.4 * intensity})`
+                        ? `0 0 ${8 * intensity}px rgba(217,119,6,${0.8 * intensity}), 0 0 ${16 * intensity}px rgba(217,119,6,${0.4 * intensity})`
                         : "none",
-                      opacity: isShimmering ? 0.7 + 0.3 * intensity : 0.85,
+                      filter: isShimmering ? `brightness(${1 + 0.5 * intensity})` : "none",
+                      transition: "filter 0.1s ease",
                     }}
                   >
                     {c}

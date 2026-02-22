@@ -4,7 +4,6 @@ import { HeroSection } from "@/components/hero-section"
 import { InstallationSection } from "@/components/installation-section"
 import { ComparisonSection } from "@/components/comparison-section"
 import { IntegrationsSection } from "@/components/integrations-section"
-import { EverythingSection } from "@/components/everything-section"
 import { FeaturesSection } from "@/components/features-section"
 import { UseCasesMarquee } from "@/components/use-cases-marquee"
 import { SkillsStore } from "@/components/skills-store"
@@ -45,10 +44,7 @@ export default function Home() {
       {/* Integrations Section */}
       <IntegrationsSection />
 
-      {/* Everything in One Install Section */}
-      <EverythingSection />
-
-      {/* Features Bento Grid */}
+      {/* Features Bento Grid (Everything in One Install) */}
       <FeaturesSection />
 
       {/* Use Cases Marquee */}
