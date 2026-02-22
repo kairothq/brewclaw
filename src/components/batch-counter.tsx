@@ -3,12 +3,13 @@
 import { useRef, useEffect } from "react"
 import { motion, useInView, useMotionValue, useTransform, animate } from "motion/react"
 
-// Preset batch data (static for v1)
+// Preset batch data (static for v1) - matches StatusChip
 const BATCH_DATA = {
-  currentBatch: 7,
+  currentBatch: 2,
+  maxBatch: 3,
   totalProcessed: 12847,
-  batchCapacity: 500,
-  currentFill: 423,
+  batchCapacity: 200,
+  currentFill: 163,
   status: "Filling" as const, // "Filling" | "Full" | "Processing"
 }
 
@@ -156,7 +157,7 @@ export function BatchCounter() {
               transition={{ duration: 0.5, delay: 0.8 }}
               className="mt-6 pt-4 border-t border-zinc-100 text-sm text-zinc-500 text-center"
             >
-              Join before batch {BATCH_DATA.currentBatch} closes
+              Only {BATCH_DATA.maxBatch} batches available — join Batch {BATCH_DATA.currentBatch} now
             </motion.p>
           </motion.div>
         </div>

@@ -3,10 +3,16 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 
-const statusMessages = [
-  "Now accepting Batch 2 applications",
-  "1,247 assistants deployed this month",
-  "New: Skills Store now live",
+interface StatusMessage {
+  text: string
+  href?: string
+}
+
+const statusMessages: StatusMessage[] = [
+  { text: "Built by OpenClaw", href: "https://openclaw.com" },
+  { text: "Now accepting Batch 2 applications (37 seats left)" },
+  { text: "1,247 assistants deployed this month" },
+  { text: "New: Skills Store now live" },
 ]
 
 export function StatusChip() {
@@ -21,6 +27,11 @@ export function StatusChip() {
   }, [])
 
   const handleClick = () => {
+    const currentMessage = statusMessages[currentIndex]
+    if (currentMessage.href) {
+      window.open(currentMessage.href, "_blank")
+      return
+    }
     const element = document.querySelector("#batch-counter")
     if (element) {
       element.scrollIntoView({ behavior: "smooth" })
@@ -47,7 +58,7 @@ export function StatusChip() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="block font-mono text-xs text-muted-foreground whitespace-nowrap"
           >
-            {statusMessages[currentIndex]}
+            {statusMessages[currentIndex].text}
           </motion.span>
         </AnimatePresence>
       </div>
