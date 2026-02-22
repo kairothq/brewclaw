@@ -206,11 +206,7 @@
   animation: marquee-right var(--marquee-duration, 30s) linear infinite;
 }
 
-/* Pause on hover - container with marquee-container class */
-.marquee-container:hover .animate-marquee-left,
-.marquee-container:hover .animate-marquee-right {
-  animation-play-state: paused;
-}
+/* Pause on hover - handled per-row with Tailwind group-hover */
 
 /* Hide scrollbar for category tabs */
 .scrollbar-hide {

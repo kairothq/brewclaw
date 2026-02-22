@@ -114,13 +114,13 @@ interface MarqueeRowProps {
   duration?: number
 }
 
-function MarqueeRow({ items, direction, duration = 30 }: MarqueeRowProps) {
+function MarqueeRow({ items, direction, duration = 20 }: MarqueeRowProps) {
   const duplicatedItems = [...items, ...items, ...items]
 
   return (
-    <div className="overflow-hidden">
+    <div className="marquee-row overflow-hidden group">
       <div
-        className={`flex gap-4 ${direction === "left" ? "animate-marquee-left" : "animate-marquee-right"}`}
+        className={`flex gap-4 ${direction === "left" ? "animate-marquee-left" : "animate-marquee-right"} group-hover:[animation-play-state:paused]`}
         style={{ ["--marquee-duration" as string]: `${duration}s` }}
       >
         {duplicatedItems.map((item, index) => (
@@ -203,7 +203,7 @@ export function UseCasesMarquee() {
             key={index}
             items={row.items}
             direction={row.direction}
-            duration={35 + index * 5}
+            duration={18 + index * 2}
           />
         ))}
       </div>
