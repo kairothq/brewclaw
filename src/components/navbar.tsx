@@ -60,10 +60,10 @@ export function Navbar() {
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-3xl"
     >
       <nav
-        className={`relative flex items-center justify-between px-4 py-3 rounded-full backdrop-blur-md border transition-all duration-300 ${
+        className={`relative flex items-center justify-between px-4 py-3 rounded-full backdrop-blur-xl border transition-all duration-300 ${
           scrolled
-            ? "bg-zinc-900/95 border-zinc-700 shadow-lg"
-            : "bg-zinc-900/40 border-zinc-800"
+            ? "bg-zinc-900/60 border-zinc-700/50 shadow-lg shadow-black/20"
+            : "bg-zinc-900/30 border-zinc-800/50"
         }`}
       >
         {/* Logo */}
