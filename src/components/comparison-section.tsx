@@ -3,6 +3,7 @@
 import { useRef } from "react"
 import { gsap, useGSAP } from "@/lib/gsap-config"
 import { Clock, AlertTriangle, Coffee } from "lucide-react"
+import Image from "next/image"
 
 const traditionalSteps = [
   { task: "Server setup & provisioning", time: "15 min" },
@@ -149,17 +150,16 @@ export function ComparisonSection() {
                 </div>
               </div>
 
-              {/* Coffee Cup Animation */}
-              <div className="relative my-8">
-                {/* Steam */}
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex gap-2">
-                  <div className="steam-line w-1 h-4 bg-gradient-to-t from-zinc-500/40 to-transparent rounded-full" />
-                  <div className="steam-line w-1 h-5 bg-gradient-to-t from-zinc-500/40 to-transparent rounded-full" />
-                  <div className="steam-line w-1 h-4 bg-gradient-to-t from-zinc-500/40 to-transparent rounded-full" />
-                </div>
-
-                {/* Coffee Emoji */}
-                <div className="text-7xl">☕</div>
+              {/* Coffee Making GIF */}
+              <div className="relative my-6">
+                <Image
+                  src="/images/making-coffee.gif"
+                  alt="Making coffee"
+                  width={180}
+                  height={180}
+                  className="rounded-xl"
+                  unoptimized
+                />
               </div>
 
               {/* Time Display */}

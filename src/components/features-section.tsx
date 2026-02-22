@@ -4,7 +4,6 @@ import { useRef } from "react"
 import { gsap, useGSAP } from "@/lib/gsap-config"
 import { motion } from "motion/react"
 import { MessageSquare, Shield, Brain, Terminal } from "lucide-react"
-import Image from "next/image"
 
 // Messaging app colors for floating icons
 const messengerIcons = [
@@ -232,19 +231,9 @@ export function FeaturesSection() {
               Everything in one install
             </h2>
           </div>
-          <div className="flex items-center gap-4">
-            <Image
-              src="/images/making-coffee.gif"
-              alt="Making coffee"
-              width={80}
-              height={80}
-              className="rounded-lg"
-              unoptimized
-            />
-            <p className="text-zinc-500 max-w-xs text-sm">
-              OpenClaw, ClawdBot, and MoltBot — configured and connected. No terminal commands.
-            </p>
-          </div>
+          <p className="text-zinc-500 max-w-sm text-sm md:text-right">
+            OpenClaw, ClawdBot, and MoltBot — configured and connected. No terminal commands, no config files.
+          </p>
         </div>
 
         {/* Features Bento Grid */}

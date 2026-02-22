@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { motion } from "motion/react"
 
 // ASCII art for BREWCLAW using block characters
-// Each letter is 7 lines tall, designed for visual impact
 const LETTERS: Record<string, string[]> = {
   B: [
     "██████╗ ",
@@ -67,7 +66,7 @@ const LETTERS: Record<string, string[]> = {
 const BRAND_NAME = "BREWCLAW"
 
 export function AsciiBrand() {
-  const [shimmerColumn, setShimmerColumn] = useState(-1)
+  const [shimmerPosition, setShimmerPosition] = useState(-20)
   const [hasAnimated, setHasAnimated] = useState(false)
 
   // Calculate total columns for shimmer animation
@@ -83,16 +82,16 @@ export function AsciiBrand() {
     if (hasAnimated) return
 
     const startDelay = setTimeout(() => {
-      let col = 0
+      let pos = -20
       const interval = setInterval(() => {
-        setShimmerColumn(col)
-        col++
-        if (col > totalColumns + 5) {
+        setShimmerPosition(pos)
+        pos += 2
+        if (pos > totalColumns + 20) {
           clearInterval(interval)
-          setShimmerColumn(-1)
+          setShimmerPosition(-20)
           setHasAnimated(true)
         }
-      }, 40)
+      }, 30)
 
       return () => clearInterval(interval)
     }, 500)
@@ -101,20 +100,20 @@ export function AsciiBrand() {
   }, [totalColumns, hasAnimated])
 
   // Re-trigger shimmer on hover
-  const handleHover = () => {
+  const handleHover = useCallback(() => {
     if (!hasAnimated) return
-    let col = 0
+    let pos = -20
     const interval = setInterval(() => {
-      setShimmerColumn(col)
-      col++
-      if (col > totalColumns + 5) {
+      setShimmerPosition(pos)
+      pos += 2
+      if (pos > totalColumns + 20) {
         clearInterval(interval)
-        setShimmerColumn(-1)
+        setShimmerPosition(-20)
       }
-    }, 30)
-  }
+    }, 25)
+  }, [hasAnimated, totalColumns])
 
-  // Render ASCII art with shimmer effect
+  // Render ASCII art with smooth shimmer effect
   const renderAscii = () => {
     let currentCol = 0
 
@@ -131,25 +130,26 @@ export function AsciiBrand() {
             <div key={lineIndex} className="leading-none">
               {line.split("").map((c, charIndex) => {
                 const absoluteCol = letterStartCol + charIndex
-                const isShimmering =
-                  shimmerColumn >= 0 &&
-                  absoluteCol >= shimmerColumn - 3 &&
-                  absoluteCol <= shimmerColumn + 3
 
-                // Intensity based on distance from shimmer center
-                const distance = Math.abs(absoluteCol - shimmerColumn)
-                const intensity = isShimmering ? 1 - distance / 4 : 0
+                // Calculate smooth shimmer intensity based on distance
+                const distance = absoluteCol - shimmerPosition
+                // Gaussian-like falloff for smooth edges
+                const intensity = Math.max(0, Math.exp(-(distance * distance) / 50))
+
+                // Coffee color interpolation (from base gray to coffee highlight)
+                const r = Math.round(200 + (217 - 200) * intensity) // toward #D97706
+                const g = Math.round(200 + (119 - 200) * intensity)
+                const b = Math.round(200 + (6 - 200) * intensity)
 
                 return (
                   <span
                     key={charIndex}
-                    className="ascii-char"
                     style={{
-                      textShadow: isShimmering
-                        ? `0 0 ${8 * intensity}px rgba(217,119,6,${0.8 * intensity}), 0 0 ${16 * intensity}px rgba(217,119,6,${0.4 * intensity})`
-                        : "none",
-                      filter: isShimmering ? `brightness(${1 + 0.5 * intensity})` : "none",
-                      transition: "filter 0.1s ease",
+                      color: intensity > 0.01 ? `rgb(${r}, ${g}, ${b})` : undefined,
+                      textShadow: intensity > 0.1
+                        ? `0 0 ${20 * intensity}px rgba(217, 119, 6, ${0.6 * intensity})`
+                        : undefined,
+                      transition: "color 0.05s ease-out",
                     }}
                   >
                     {c}
@@ -182,10 +182,7 @@ export function AsciiBrand() {
           fontSize: "clamp(0.5rem, 2vw, 1rem)",
           lineHeight: 1.1,
           letterSpacing: "-0.05em",
-          background: "linear-gradient(180deg, #D97706 0%, #78350F 30%, #ffffff 60%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
+          color: "rgba(200, 200, 200, 0.9)",
         }}
       >
         {renderAscii()}
