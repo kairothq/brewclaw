@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - GSAP registration: `@gsap/react` with `useGSAP()` hook
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffolding with Next.js 15, Tailwind v4, shadcn/ui
+- [x] 01-01-PLAN.md — Project scaffolding with Next.js 15, Tailwind v4, shadcn/ui
 - [ ] 01-02-PLAN.md — Animation providers (Motion + GSAP), typography, design tokens, reduced-motion
 
 ### Phase 2: Core Layout
@@ -155,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/2 | Planned | - |
+| 1. Foundation | 1/2 | In Progress | - |
 | 2. Core Layout | 0/2 | Not started | - |
 | 3. Hero Animations | 0/3 | Not started | - |
 | 4. Scroll Sections | 0/3 | Not started | - |
@@ -164,4 +164,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 ---
 *Roadmap created: 2025-02-22*
-*Last updated: 2025-02-22 — Phase 1 planned*
+*Last updated: 2026-02-22 — 01-01 completed*

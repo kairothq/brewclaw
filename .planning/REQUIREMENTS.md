@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Foundation
 
-- [ ] **FOUND-01**: Project scaffolded with Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui
+- [x] **FOUND-01**: Project scaffolded with Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui
 - [ ] **FOUND-02**: Animation providers configured (Motion + GSAP with proper cleanup)
 - [ ] **FOUND-03**: Typography system with Space Grotesk, Geist, Geist Mono fonts
 - [ ] **FOUND-04**: Design tokens (colors, spacing) implemented as CSS variables
@@ -155,7 +155,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Pending |
 | FOUND-03 | Phase 1 | Pending |
 | FOUND-04 | Phase 1 | Pending |
@@ -231,4 +231,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2025-02-22*
-*Last updated: 2025-02-22 after roadmap creation*
+*Last updated: 2026-02-22 — FOUND-01 completed*
