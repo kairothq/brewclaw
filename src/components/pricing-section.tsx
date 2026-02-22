@@ -93,29 +93,35 @@ export function PricingSection() {
       if (!containerRef.current) return
 
       // Header animation
-      gsap.from(".pricing-header", {
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%",
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: "power2.out",
-      })
+      gsap.fromTo(".pricing-header",
+        { opacity: 0, y: 20 },
+        {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+          },
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: "power2.out",
+        }
+      )
 
       // Staggered cards animation
-      gsap.from(".pricing-card", {
-        scrollTrigger: {
-          trigger: ".pricing-grid",
-          start: "top 70%",
-        },
-        opacity: 0,
-        y: 40,
-        stagger: 0.15,
-        duration: 0.6,
-        ease: "power2.out",
-      })
+      gsap.fromTo(".pricing-card",
+        { opacity: 0, y: 40 },
+        {
+          scrollTrigger: {
+            trigger: ".pricing-grid",
+            start: "top 80%",
+          },
+          opacity: 1,
+          y: 0,
+          stagger: 0.15,
+          duration: 0.6,
+          ease: "power2.out",
+        }
+      )
     },
     { scope: containerRef }
   )

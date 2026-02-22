@@ -1,147 +1,10 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { gsap, useGSAP } from "@/lib/gsap-config"
 import { motion } from "motion/react"
 import { Shield, Lock, Zap } from "lucide-react"
-import Link from "next/link"
-
-// Border beam animation component
-function BorderBeamCTA() {
-  return (
-    <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
-      <div
-        className="absolute w-24 h-24 blur-md"
-        style={{
-          background: "linear-gradient(135deg, #D97706 0%, #ffffff 50%, #78350F 100%)",
-          offsetPath: "rect(0 100% 100% 0 round 9999px)",
-          animation: "border-beam-cta 3s linear infinite",
-        }}
-      />
-      <style jsx>{`
-        @keyframes border-beam-cta {
-          0% { offset-distance: 0%; }
-          100% { offset-distance: 100%; }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-// CSS-based liquid metal button effect with border beam
-function LiquidMetalButton({
-  label = "Get Started",
-  href = "/signup",
-}: {
-  label?: string
-  href?: string
-}) {
-  const [isHovered, setIsHovered] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
-
-  return (
-    <Link href={href} className="relative inline-block group">
-      <motion.div
-        className="relative"
-        style={{ perspective: "1000px" }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => {
-          setIsHovered(false)
-          setIsPressed(false)
-        }}
-        onMouseDown={() => setIsPressed(true)}
-        onMouseUp={() => setIsPressed(false)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {/* Constantly moving border beam */}
-        <BorderBeamCTA />
-
-        {/* Outer glow effect - intensifies on hover */}
-        <motion.div
-          className="absolute inset-0 rounded-full blur-xl"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(120, 53, 15, 0.4) 0%, rgba(217, 119, 6, 0.3) 50%, rgba(120, 53, 15, 0.4) 100%)",
-          }}
-          animate={{
-            opacity: isHovered ? 1 : 0.5,
-            scale: isHovered ? 1.2 : 1,
-          }}
-          transition={{ duration: 0.3 }}
-        />
-
-        {/* Main button */}
-        <div
-          className="relative px-10 py-5 rounded-full overflow-hidden"
-          style={{
-            background: isPressed
-              ? "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)"
-              : isHovered
-                ? "linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%)"
-                : "linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)",
-            boxShadow: isPressed
-              ? "inset 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)"
-              : isHovered
-                ? "0 20px 60px rgba(217, 119, 6, 0.4), 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)"
-                : "0 8px 30px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {/* Liquid shimmer sweep on hover */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 25%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 75%, transparent 100%)",
-              backgroundSize: "200% 100%",
-            }}
-            animate={{
-              backgroundPosition: isHovered ? ["-200% 0", "200% 0"] : "-200% 0",
-            }}
-            transition={{
-              duration: 0.8,
-              ease: "easeOut",
-            }}
-          />
-
-          {/* Inner glow pulse on hover */}
-          {isHovered && (
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                background: "radial-gradient(circle at center, rgba(217, 119, 6, 0.2) 0%, transparent 70%)",
-              }}
-              animate={{
-                opacity: [0.5, 1, 0.5],
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          )}
-
-          {/* Button text with glow on hover */}
-          <span
-            className="relative z-10 text-lg font-semibold tracking-wide"
-            style={{
-              color: "#ffffff",
-              textShadow: isHovered
-                ? "0 0 30px rgba(217, 119, 6, 0.8), 0 0 60px rgba(217, 119, 6, 0.4)"
-                : "0 1px 2px rgba(0,0,0,0.5)",
-              transition: "all 0.3s ease",
-            }}
-          >
-            {label}
-          </span>
-        </div>
-      </motion.div>
-    </Link>
-  )
-}
+import { LiquidMetalButton } from "@/components/liquid-metal-button"
 
 const trustBadges = [
   { icon: Shield, label: "SOC2 Compliant" },
@@ -216,22 +79,24 @@ export function FinalCTA() {
       id="cta"
       className="relative py-32 px-6 bg-[#0A0A0A] overflow-hidden"
     >
-      {/* Background gradient accent */}
+      {/* Grid/Checkbox background pattern */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* Radial gradient accent at bottom */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 100%, rgba(120, 53, 15, 0.15) 0%, transparent 50%)",
-        }}
-      />
-
-      {/* Subtle grid pattern */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+            "radial-gradient(ellipse 80% 50% at 50% 100%, rgba(120, 53, 15, 0.1) 0%, transparent 50%)",
         }}
       />
 
@@ -251,8 +116,8 @@ export function FinalCTA() {
           takes under 5 minutes. No code required.
         </p>
 
-        {/* CTA Button */}
-        <div className="cta-button mb-12">
+        {/* CTA Button - Shader Liquid Metal */}
+        <div className="cta-button mb-12 flex justify-center">
           <LiquidMetalButton label="Start Free Today" href="/signup" />
         </div>
 

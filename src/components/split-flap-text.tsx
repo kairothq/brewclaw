@@ -127,6 +127,17 @@ interface SplitFlapTextProps {
 
 const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("")
 
+// ASCII block letter representations (4 lines each for compact display)
+const ASCII_LETTERS: Record<string, string[]> = {
+  B: ["██████╗", "██████╔", "██████╗", "╚═════╝"],
+  R: ["██████╗", "██████╔", "██║  ██", "╚═╝  ╚═"],
+  E: ["██████╗", "█████╗ ", "██████╗", "╚═════╝"],
+  W: ["██╗  ██╗", "██║█╗██║", "╚██╔██╔╝", " ╚═╝╚═╝ "],
+  C: ["██████╗", "██╔═══╝", "██████╗", "╚═════╝"],
+  L: ["██╗    ", "██║    ", "██████╗", "╚═════╝"],
+  A: [" █████╗", "██████║", "██║ ██║", "╚═╝ ╚═╝"],
+}
+
 function SplitFlapTextInner({ text, className = "", speed = 50 }: SplitFlapTextProps) {
   const chars = useMemo(() => text.split(""), [text])
   const [animationKey, setAnimationKey] = useState(0)
@@ -235,6 +246,9 @@ function SplitFlapChar({ char, index, animationKey, skipEntrance, speed, playCli
     }
   }, [displayChar, isSpace, tileDelay, animationKey, skipEntrance, index, speed, playClick])
 
+  const asciiArt = ASCII_LETTERS[displayChar]
+  const showAscii = isSettled && asciiArt
+
   if (isSpace) {
     return (
       <div
@@ -243,6 +257,30 @@ function SplitFlapChar({ char, index, animationKey, skipEntrance, speed, playCli
           fontSize: "clamp(4rem, 15vw, 14rem)",
         }}
       />
+    )
+  }
+
+  // Render ASCII block art when settled
+  if (showAscii) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="relative flex flex-col items-center justify-center font-mono"
+        style={{
+          fontSize: "clamp(0.5rem, 2vw, 1rem)",
+          lineHeight: 1.1,
+          color: "#ffffff",
+          padding: "0 0.1em",
+        }}
+      >
+        {asciiArt.map((line, i) => (
+          <div key={i} className="whitespace-pre" style={{ opacity: 0.9 }}>
+            {line}
+          </div>
+        ))}
+      </motion.div>
     )
   }
 

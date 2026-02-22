@@ -162,29 +162,35 @@ export function FeaturesSection() {
       if (!containerRef.current) return
 
       // Staggered fade-in for all feature cards
-      gsap.from(".feature-card", {
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 70%",
-        },
-        opacity: 0,
-        y: 40,
-        stagger: 0.1,
-        duration: 0.6,
-        ease: "power2.out",
-      })
+      gsap.fromTo(".feature-card",
+        { opacity: 0, y: 40 },
+        {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+          },
+          opacity: 1,
+          y: 0,
+          stagger: 0.1,
+          duration: 0.6,
+          ease: "power2.out",
+        }
+      )
 
       // Header animation
-      gsap.from(".features-header", {
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%",
-        },
-        opacity: 0,
-        y: 20,
-        duration: 0.6,
-        ease: "power2.out",
-      })
+      gsap.fromTo(".features-header",
+        { opacity: 0, y: 20 },
+        {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+          },
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: "power2.out",
+        }
+      )
     },
     { scope: containerRef }
   )

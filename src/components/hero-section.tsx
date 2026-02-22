@@ -40,23 +40,15 @@ export function HeroSection() {
         Deploy your personal AI assistant in under 5 minutes.
       </h2>
 
-      {/* Sub-copy with bullet separators - 8 capabilities */}
-      <p className="font-mono text-sm md:text-base text-muted-foreground text-center mb-12 max-w-3xl">
+      {/* Sub-copy with bullet separators */}
+      <p className="font-mono text-sm md:text-base text-muted-foreground text-center mb-12">
         <span>Writes</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
+        <span className="mx-3 text-border">|</span>
         <span>Researches</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
+        <span className="mx-3 text-border">|</span>
         <span>Clears inbox</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
+        <span className="mx-3 text-border">|</span>
         <span>Sends briefs</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
-        <span>Schedules</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
-        <span>Summarizes</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
-        <span>Translates</span>
-        <span className="mx-2 md:mx-3 text-border">|</span>
-        <span>Automates</span>
       </p>
 
       {/* CTA Button */}

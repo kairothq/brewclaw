@@ -178,9 +178,9 @@ export function AsciiBrand() {
       <div
         className="font-mono text-white whitespace-pre"
         style={{
-          fontSize: "clamp(1.5rem, 5vw, 3.5rem)",
+          fontSize: "clamp(0.5rem, 2vw, 1rem)",
           lineHeight: 1.1,
-          letterSpacing: "-0.02em",
+          letterSpacing: "-0.05em",
         }}
       >
         {renderAscii()}
