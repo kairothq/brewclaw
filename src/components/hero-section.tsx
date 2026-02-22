@@ -1,11 +1,14 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { AsciiBrand } from "@/components/ascii-brand"
 import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { StatusChip } from "@/components/status-chip"
 import { LiquidMetalButton } from "@/components/liquid-metal-button"
+import { StarParticles } from "@/components/star-particles"
+import { HighlightText } from "@/components/highlight-text"
 
 export function HeroSection() {
   const searchParams = useSearchParams()
@@ -16,6 +19,11 @@ export function HeroSection() {
       id="hero"
       className="relative flex flex-col items-center justify-center min-h-screen px-6 py-24 pt-32 bg-[#0A0A0A]"
     >
+      {/* Twinkling star particles in background */}
+      <Suspense fallback={null}>
+        <StarParticles />
+      </Suspense>
+
       {/* Status Chip */}
       <div className="mb-8">
         <StatusChip />
@@ -36,8 +44,8 @@ export function HeroSection() {
       </div>
 
       {/* Tagline */}
-      <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl text-white text-center max-w-2xl mb-4 font-bold">
-        Deploy your personal AI assistant in time it takes to brew a coffee.
+      <h2 className="relative z-10 font-heading text-2xl md:text-3xl lg:text-4xl text-white text-center max-w-2xl mb-4 font-bold">
+        Deploy your personal AI assistant in time it takes to brew a <HighlightText>coffee</HighlightText>.
       </h2>
 
       {/* Sub-copy with bullet separators */}
