@@ -176,11 +176,15 @@ export function AsciiBrand() {
 
       {/* ASCII Art Display */}
       <div
-        className="font-mono text-white whitespace-pre"
+        className="font-mono whitespace-pre"
         style={{
           fontSize: "clamp(0.5rem, 2vw, 1rem)",
           lineHeight: 1.1,
           letterSpacing: "-0.05em",
+          background: "linear-gradient(180deg, #D97706 0%, #78350F 30%, #ffffff 60%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
         }}
       >
         {renderAscii()}
