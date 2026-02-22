@@ -132,9 +132,10 @@ interface SkillCardProps {
 
 function SkillCard({ skill }: SkillCardProps) {
   return (
-    <motion.div
-      className="skill-card group bg-zinc-50 border border-zinc-200 rounded-xl p-5 hover:border-zinc-300 hover:shadow-sm transition-all"
-      whileHover={{ scale: 1.01, y: -2 }}
+    <motion.a
+      href="#"
+      className="skill-card group bg-zinc-50 border border-zinc-200 rounded-xl p-6 hover:border-zinc-300 hover:shadow-md transition-all cursor-pointer block"
+      whileHover={{ scale: 1.02, y: -3 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       {/* Header with name and arrow */}
@@ -168,7 +169,7 @@ function SkillCard({ skill }: SkillCardProps) {
           <span className="text-xs font-mono">{formatDownloads(skill.downloads)}</span>
         </div>
       </div>
-    </motion.div>
+    </motion.a>
   )
 }
 
@@ -315,11 +316,13 @@ export function SkillsStore() {
             ))}
           </div>
 
-          {/* Skills Grid */}
-          <div className="skills-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
-            {filteredSkills.map((skill) => (
-              <SkillCard key={skill.id} skill={skill} />
-            ))}
+          {/* Skills Grid - Scrollable window */}
+          <div className="skills-grid-container max-h-[480px] overflow-y-auto overscroll-contain p-5">
+            <div className="skills-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredSkills.map((skill) => (
+                <SkillCard key={skill.id} skill={skill} />
+              ))}
+            </div>
           </div>
 
           {/* Empty State */}

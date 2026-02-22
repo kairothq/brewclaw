@@ -80,7 +80,7 @@ export function Navbar() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span
-                        className="relative px-4 py-2 text-sm text-zinc-500 cursor-not-allowed"
+                        className="relative px-4 py-2 text-sm text-white/50 cursor-not-allowed"
                         onMouseEnter={() => setHoveredIndex(index)}
                         onMouseLeave={() => setHoveredIndex(null)}
                       >
@@ -102,7 +102,7 @@ export function Navbar() {
                 ) : (
                   <a
                     href={item.href}
-                    className="relative px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                    className="relative px-4 py-2 text-sm text-white/90 hover:text-white transition-colors"
                     onMouseEnter={() => setHoveredIndex(index)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onClick={(e) => handleNavClick(e, item.href, item.disabled)}
