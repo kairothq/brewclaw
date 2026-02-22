@@ -106,3 +106,126 @@
   0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
   50% { opacity: 0.6; box-shadow: 0 0 8px currentColor; }
 }
+
+/* Shimmer animation for CTA buttons */
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Pulse-glow utility for status indicators */
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ASCII shimmer animation */
+@keyframes ascii-shimmer {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; text-shadow: 0 0 8px rgba(255,255,255,0.6), 0 0 16px rgba(255,255,255,0.3); }
+  100% { opacity: 0.6; }
+}
+
+.ascii-char {
+  display: inline-block;
+  transition: text-shadow 0.15s ease;
+}
+
+.ascii-shimmer-active {
+  text-shadow: 0 0 8px rgba(255,255,255,0.8), 0 0 16px rgba(255,255,255,0.4);
+}
+
+/* Beating dot animation for installation timeline */
+@keyframes beat {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(120, 53, 15, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(120, 53, 15, 0);
+  }
+}
+
+.beating-dot {
+  animation: beat 1.5s ease-in-out infinite;
+}
+
+/* Coffee steam animation */
+@keyframes steam {
+  0% {
+    transform: translateY(0) scaleX(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-10px) scaleX(1.2);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-20px) scaleX(0.8);
+    opacity: 0;
+  }
+}
+
+.steam-line {
+  animation: steam 2s ease-out infinite;
+}
+
+.steam-line:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.steam-line:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+/* Marquee animation utilities */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+.animate-marquee-left {
+  animation: marquee-left var(--marquee-duration, 30s) linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marquee-right var(--marquee-duration, 30s) linear infinite;
+}
+
+/* Pause on hover - container with marquee-container class */
+.marquee-container:hover .animate-marquee-left,
+.marquee-container:hover .animate-marquee-right {
+  animation-play-state: paused;
+}
+
+/* Hide scrollbar for category tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Line clamp utility for skill descriptions */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

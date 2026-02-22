@@ -4,6 +4,8 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { MotionProvider } from '@/components/providers/motion-provider'
 import { GSAPProvider } from '@/components/providers/gsap-provider'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { Navbar } from '@/components/navbar'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -30,7 +32,10 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-background text-foreground">
         <MotionProvider>
           <GSAPProvider>
-            {children}
+            <TooltipProvider>
+              <Navbar />
+              {children}
+            </TooltipProvider>
           </GSAPProvider>
         </MotionProvider>
       </body>

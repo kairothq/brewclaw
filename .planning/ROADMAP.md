@@ -13,10 +13,10 @@ This roadmap delivers a premium SaaS landing page for BrewClaw with sophisticate
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Project setup, animation providers, design tokens, typography
-- [ ] **Phase 2: Core Layout** - Navigation, footer, basic page structure
-- [ ] **Phase 3: Hero Animations** - SplitFlap/ASCII brand animation, status chip, Web Audio
-- [ ] **Phase 4: Scroll Sections** - Installation steps, comparison, features bento grid
-- [ ] **Phase 5: Interactive Components** - Use cases marquee, batch counter, skills store
+- [x] **Phase 2: Core Layout** - Navigation, footer, basic page structure
+- [x] **Phase 3: Hero Animations** - SplitFlap/ASCII brand animation, status chip, Web Audio
+- [x] **Phase 4: Scroll Sections** - Installation steps, comparison, features bento grid
+- [x] **Phase 5: Interactive Components** - Use cases marquee, batch counter, skills store
 - [ ] **Phase 6: Conversion Elements** - Pricing cards, final CTA with shader button
 
 ## Phase Details
@@ -58,8 +58,8 @@ Plans:
 - Footer: easyclaw.app reference style
 
 Plans:
-- [ ] 02-01: Sticky navigation with glass blur
-- [ ] 02-02: Footer 4-column layout
+- [x] 02-01-PLAN.md — Sticky navigation with glass blur
+- [x] 02-02-PLAN.md — Footer 4-column layout
 
 ### Phase 3: Hero Animations
 **Goal**: Deliver the hero section with brand animation that creates a memorable first impression
@@ -71,7 +71,7 @@ Plans:
   3. Sound toggle appears and controls SplitFlap audio (muted by default)
   4. Hero CTA button links to signup funnel
   5. Trust line "$2 credits included - No code needed" is visible
-**Plans**: TBD
+**Plans**: 3 plans
 
 **Template References:**
 - Hero section: `/v0 templates/New/orange-animation/components/hero-section.tsx`
@@ -79,9 +79,9 @@ Plans:
 - Pulse-glow: `/v0 templates/New/sticky-nav-pricing/app/globals.css`
 
 Plans:
-- [ ] 03-01: Status chip with rotating messages
-- [ ] 03-02: Hero section with SplitFlap/ASCII animation
-- [ ] 03-03: Web Audio integration for SplitFlap sounds
+- [x] 03-01-PLAN.md — Status chip with rotating messages
+- [x] 03-02-PLAN.md — Hero section with SplitFlap/ASCII animation
+- [x] 03-03-PLAN.md — Web Audio integration for SplitFlap sounds
 
 ### Phase 4: Scroll Sections
 **Goal**: Build the scroll-triggered content sections that demonstrate product value
@@ -101,9 +101,9 @@ Plans:
 - Features: easyclaw.app bento grid reference
 
 Plans:
-- [ ] 04-01: Installation steps with timeline animation
-- [ ] 04-02: Comparison section with coffee brewing
-- [ ] 04-03: Features bento grid
+- [x] 04-01-PLAN.md — Installation steps with timeline animation
+- [x] 04-02-PLAN.md — Comparison section with coffee brewing
+- [x] 04-03-PLAN.md — Features bento grid
 
 ### Phase 5: Interactive Components
 **Goal**: Add interactive elements that showcase versatility and create urgency
@@ -123,9 +123,9 @@ Plans:
 - Batch Counter: Custom minimal design
 
 Plans:
-- [ ] 05-01: Use cases marquee
-- [ ] 05-02: Skills store directory
-- [ ] 05-03: Batch counter with progress visualization
+- [x] 05-01-PLAN.md — Use cases marquee with two-row opposite scroll
+- [x] 05-02-PLAN.md — Skills store directory with category filter
+- [x] 05-03-PLAN.md — Batch counter with progress visualization
 
 ### Phase 6: Conversion Elements
 **Goal**: Polish the conversion-critical pricing and CTA sections to maximize signups
@@ -156,12 +156,12 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete    | 2026-02-22 |
-| 2. Core Layout | 0/2 | Not started | - |
-| 3. Hero Animations | 0/3 | Not started | - |
-| 4. Scroll Sections | 0/3 | Not started | - |
-| 5. Interactive Components | 0/3 | Not started | - |
+| 2. Core Layout | 2/2 | Complete | 2026-02-22 |
+| 3. Hero Animations | 3/3 | Complete | 2026-02-22 |
+| 4. Scroll Sections | 3/3 | Complete | 2026-02-22 |
+| 5. Interactive Components | 3/3 | Complete | 2026-02-22 |
 | 6. Conversion Elements | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2025-02-22*
-*Last updated: 2026-02-22 — Phase 1 complete, 01-02 completed*
+*Last updated: 2026-02-22 — Phase 5 complete (Interactive Components - Marquee, Skills Store, Batch Counter)*

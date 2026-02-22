@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "{\n    \"hooks\": {\n      \"Stop\": [\n        {\n          \"hooks\": [\n            {\n              \"type\": \"command\",\n              \"command\": \"osascript -e 'display notification \\\"Task completed\\\" with title \\\"Claude Code\\\"'\"\n            }\n          ]\n        }\n      ]\n    }\n  }",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "Send notification when the task is completed or paused for my input"
+          }
+        ]
+      }
+    ]
+  }
+}
