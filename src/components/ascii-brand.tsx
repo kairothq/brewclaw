@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react"
 
-// ASCII art for BREWCLAW using block characters
+// ASCII art for BREWCLAW using block characters (7 lines per letter)
 const LETTERS: Record<string, string[]> = {
   B: [
     "██████╗ ",
@@ -11,6 +11,7 @@ const LETTERS: Record<string, string[]> = {
     "██╔══██╗",
     "██████╔╝",
     "╚═════╝ ",
+    "        ",
   ],
   R: [
     "██████╗ ",
@@ -19,6 +20,7 @@ const LETTERS: Record<string, string[]> = {
     "██╔══██╗",
     "██║  ██║",
     "╚═╝  ╚═╝",
+    "        ",
   ],
   E: [
     "███████╗",
@@ -27,6 +29,7 @@ const LETTERS: Record<string, string[]> = {
     "██╔══╝  ",
     "███████╗",
     "╚══════╝",
+    "        ",
   ],
   W: [
     "██╗    ██╗",
@@ -35,6 +38,7 @@ const LETTERS: Record<string, string[]> = {
     "██║███╗██║",
     "╚███╔███╔╝",
     " ╚══╝╚══╝ ",
+    "          ",
   ],
   C: [
     " ██████╗",
@@ -43,6 +47,7 @@ const LETTERS: Record<string, string[]> = {
     "██║     ",
     "╚██████╗",
     " ╚═════╝",
+    "        ",
   ],
   L: [
     "██╗     ",
@@ -51,6 +56,7 @@ const LETTERS: Record<string, string[]> = {
     "██║     ",
     "███████╗",
     "╚══════╝",
+    "        ",
   ],
   A: [
     " █████╗ ",
@@ -59,6 +65,7 @@ const LETTERS: Record<string, string[]> = {
     "██╔══██║",
     "██║  ██║",
     "╚═╝  ╚═╝",
+    "        ",
   ],
 }
 
@@ -99,7 +106,7 @@ export function AsciiBrand() {
         className="font-mono whitespace-pre"
         style={{
           fontSize: "clamp(0.5rem, 2vw, 1rem)",
-          lineHeight: 1.1,
+          lineHeight: 1.375,
           letterSpacing: "-0.05em",
           background: "linear-gradient(90deg, #D97706, #fff, #D97706)",
           WebkitBackgroundClip: "text",
