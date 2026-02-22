@@ -37,7 +37,7 @@ export function HeroSection() {
 
       {/* Tagline */}
       <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl text-white text-center max-w-2xl mb-4">
-        Deploy your personal AI assistant in under 5 minutes.
+        Deploy your personal AI assistant in time it takes to brew a coffee.
       </h2>
 
       {/* Sub-copy with bullet separators */}
@@ -52,7 +52,7 @@ export function HeroSection() {
       </p>
 
       {/* CTA Button - Shader */}
-      <LiquidMetalButton label="Get Started" href="/signup" />
+      <LiquidMetalButton label="Start Free Today" href="/signup" />
 
       {/* Trust Line */}
       <p className="mt-6 font-mono text-xs text-muted-foreground">

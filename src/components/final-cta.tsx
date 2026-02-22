@@ -112,8 +112,10 @@ export function FinalCTA() {
 
         {/* Subtext */}
         <p className="cta-subtext text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
-          Join thousands of users who have automated their daily tasks. Setup
-          takes under 5 minutes. No code required.
+          Get real work done by the world&apos;s fastest growing software
+          <span className="block text-sm text-zinc-500 mt-2 font-mono">
+            (0 → 215,920 stars in 86 days on GitHub)
+          </span>
         </p>
 
         {/* CTA Button - Shader Liquid Metal */}
