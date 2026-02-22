@@ -10,10 +10,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Foundation
 
 - [x] **FOUND-01**: Project scaffolded with Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui
-- [ ] **FOUND-02**: Animation providers configured (Motion + GSAP with proper cleanup)
-- [ ] **FOUND-03**: Typography system with Space Grotesk, Geist, Geist Mono fonts
-- [ ] **FOUND-04**: Design tokens (colors, spacing) implemented as CSS variables
-- [ ] **FOUND-05**: Reduced-motion detection and respect system
+- [x] **FOUND-02**: Animation providers configured (Motion + GSAP with proper cleanup)
+- [x] **FOUND-03**: Typography system with Space Grotesk, Geist, Geist Mono fonts
+- [x] **FOUND-04**: Design tokens (colors, spacing) implemented as CSS variables
+- [x] **FOUND-05**: Reduced-motion detection and respect system
 
 ### Navigation
 
@@ -156,10 +156,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Complete |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
-| FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Complete |
+| FOUND-03 | Phase 1 | Complete |
+| FOUND-04 | Phase 1 | Complete |
+| FOUND-05 | Phase 1 | Complete |
 | NAV-01 | Phase 2 | Pending |
 | NAV-02 | Phase 2 | Pending |
 | NAV-03 | Phase 2 | Pending |

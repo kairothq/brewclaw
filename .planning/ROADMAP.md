@@ -12,7 +12,7 @@ This roadmap delivers a premium SaaS landing page for BrewClaw with sophisticate
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Project setup, animation providers, design tokens, typography
+- [x] **Phase 1: Foundation** - Project setup, animation providers, design tokens, typography
 - [ ] **Phase 2: Core Layout** - Navigation, footer, basic page structure
 - [ ] **Phase 3: Hero Animations** - SplitFlap/ASCII brand animation, status chip, Web Audio
 - [ ] **Phase 4: Scroll Sections** - Installation steps, comparison, features bento grid
@@ -39,7 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Project scaffolding with Next.js 15, Tailwind v4, shadcn/ui
-- [ ] 01-02-PLAN.md — Animation providers (Motion + GSAP), typography, design tokens, reduced-motion
+- [x] 01-02-PLAN.md — Animation providers (Motion + GSAP), typography, design tokens, reduced-motion
 
 ### Phase 2: Core Layout
 **Goal**: Frame the page with navigation and footer so users can navigate and the page feels complete
@@ -155,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/2 | In Progress | - |
+| 1. Foundation | 2/2 | Complete | 2026-02-22 |
 | 2. Core Layout | 0/2 | Not started | - |
 | 3. Hero Animations | 0/3 | Not started | - |
 | 4. Scroll Sections | 0/3 | Not started | - |
@@ -164,4 +164,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 ---
 *Roadmap created: 2025-02-22*
-*Last updated: 2026-02-22 — 01-01 completed*
+*Last updated: 2026-02-22 — Phase 1 complete, 01-02 completed*
