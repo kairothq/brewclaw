@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { Menu, X } from "lucide-react"
@@ -28,6 +28,16 @@ const navItems = [
 export function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Detect scroll to add solid background
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, disabled: boolean) => {
     if (disabled) {
@@ -49,7 +59,13 @@ export function Navbar() {
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-3xl"
     >
-      <nav className="relative flex items-center justify-between px-4 py-3 rounded-full bg-zinc-900/40 backdrop-blur-md border border-zinc-800">
+      <nav
+        className={`relative flex items-center justify-between px-4 py-3 rounded-full backdrop-blur-md border transition-all duration-300 ${
+          scrolled
+            ? "bg-zinc-900/95 border-zinc-700 shadow-lg"
+            : "bg-zinc-900/40 border-zinc-800"
+        }`}
+      >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <span className="font-heading font-semibold text-white text-lg">BrewClaw</span>
