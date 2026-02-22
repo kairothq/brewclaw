@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { AsciiBrand } from "@/components/ascii-brand"
 import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { StatusChip } from "@/components/status-chip"
+import { LiquidMetalButton } from "@/components/liquid-metal-button"
 
 export function HeroSection() {
   const searchParams = useSearchParams()
@@ -51,14 +51,8 @@ export function HeroSection() {
         <span>Sends briefs</span>
       </p>
 
-      {/* CTA Button */}
-      <Button
-        asChild
-        size="lg"
-        className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-8 py-6 text-base font-medium"
-      >
-        <Link href="/signup">Get Started</Link>
-      </Button>
+      {/* CTA Button - Shader */}
+      <LiquidMetalButton label="Get Started" href="/signup" />
 
       {/* Trust Line */}
       <p className="mt-6 font-mono text-xs text-muted-foreground">
