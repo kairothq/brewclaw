@@ -1,0 +1,13 @@
+{
+  "project": {
+    "name": "brewclaw",
+    "created": "2026-02-25",
+    "root": "/Users/divykairoth/Downloads/Needed/Divy's Workspace/1. Projects/brewclaw"
+  },
+  "workflow": {
+    "auto_advance": false,
+    "commit_docs": true,
+    "executor_model": "opus",
+    "research": true
+  }
+}

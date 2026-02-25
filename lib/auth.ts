@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
-import Resend from "next-auth/providers/resend"
+// import Resend from "next-auth/providers/resend" // Uncomment when AUTH_RESEND_KEY is configured
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
@@ -11,10 +11,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY!,
-      from: "noreply@brewclaw.com", // Change in production
-    }),
+    // Resend provider disabled until AUTH_RESEND_KEY is set
+    // Resend({
+    //   apiKey: process.env.AUTH_RESEND_KEY!,
+    //   from: "noreply@brewclaw.com",
+    // }),
   ],
   pages: {
     signIn: '/signin',

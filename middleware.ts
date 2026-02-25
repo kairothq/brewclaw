@@ -1,6 +1,9 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
+// Force Node.js runtime (not Edge) for crypto support
+export const runtime = "nodejs"
+
 export default auth((req) => {
   const isLoggedIn = !!req.auth
   const { pathname } = req.nextUrl
