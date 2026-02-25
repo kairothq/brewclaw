@@ -90,13 +90,49 @@ Deferred to next milestone.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | (populated during roadmap creation) |
+| FOUND-01 | Phase 13 | Pending |
+| FOUND-02 | Phase 13 | Pending |
+| FOUND-03 | Phase 13 | Pending |
+| FOUND-04 | Phase 13 | Pending |
+| AUTH-01 | Phase 14 | Pending |
+| AUTH-02 | Phase 14 | Pending |
+| AUTH-03 | Phase 14 | Pending |
+| AUTH-04 | Phase 14 | Pending |
+| AUTH-05 | Phase 14 | Pending |
+| AUTH-06 | Phase 14 | Pending |
+| INFRA-03 | Phase 14 | Pending |
+| PAY-01 | Phase 15 | Pending |
+| PAY-02 | Phase 15 | Pending |
+| PAY-03 | Phase 15 | Pending |
+| PAY-04 | Phase 15 | Pending |
+| PAY-05 | Phase 15 | Pending |
+| ONBD-01 | Phase 16 | Pending |
+| ONBD-02 | Phase 16 | Pending |
+| ONBD-03 | Phase 16 | Pending |
+| ONBD-04 | Phase 16 | Pending |
+| ONBD-05 | Phase 16 | Pending |
+| ONBD-06 | Phase 16 | Pending |
+| ONBD-07 | Phase 16 | Pending |
+| ONBD-08 | Phase 16 | Pending |
+| DASH-01 | Phase 17 | Pending |
+| DASH-02 | Phase 17 | Pending |
+| DASH-03 | Phase 17 | Pending |
+| DASH-04 | Phase 17 | Pending |
+| DASH-05 | Phase 17 | Pending |
+| DASH-06 | Phase 17 | Pending |
+| INFRA-01 | Phase 17 | Pending |
+| INFRA-02 | Phase 17 | Pending |
+| BRAND-01 | Phase 18 | Pending |
+| BRAND-02 | Phase 18 | Pending |
+| BRAND-03 | Phase 18 | Pending |
+| INFRA-04 | Phase 19 | Pending |
 
 **Coverage:**
-- v2.0 requirements: 27 total
-- Mapped to phases: 0
-- Unmapped: 27
+- v2.0 requirements: 36 total
+- Mapped to phases: 36
+- Unmapped: 0
+- Coverage: 100%
 
 ---
 *Requirements defined: 2026-02-26*
-*Last updated: 2026-02-26 after initial definition*
+*Last updated: 2026-02-26 with phase traceability*
