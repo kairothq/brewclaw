@@ -55,12 +55,12 @@ export function MagicLinkForm() {
           : "Send Magic Link"}
       </Button>
       {status === "error" && (
-        <p id="email-error" className="text-red-500 text-sm" role="alert">
+        <p id="email-error" className="text-destructive text-sm" role="alert">
           {errorMessage}
         </p>
       )}
       {status === "sent" && (
-        <p className="text-green-600 text-sm">
+        <p className="text-emerald-400 text-sm">
           We sent a magic link to your email. Click the link to sign in.
         </p>
       )}
