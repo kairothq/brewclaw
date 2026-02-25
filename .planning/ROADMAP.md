@@ -4,7 +4,7 @@
 
 | Phase | Name | Plans | Completed | Status |
 |-------|------|-------|-----------|--------|
-| 12 | signup-step | 3 | 2 | In Progress |
+| 12 | 3/3 | Complete   | 2026-02-25 | In Progress |
 
 ## Current Phase: 12-signup-step
 
