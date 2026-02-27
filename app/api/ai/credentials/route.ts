@@ -1,25 +1,62 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { encrypt, decrypt } from "@/lib/crypto"
 
 /**
- * In-memory credential store for development
+ * In-memory credential store with encryption at rest
  *
- * SECURITY NOTES (for production):
- * - Use encryption at rest (AES-256) for stored credentials
- * - Consider using a secrets manager (AWS Secrets Manager, HashiCorp Vault, etc.)
- * - Never log actual API key values
- * - Implement audit logging for credential access
- * - Set appropriate TTLs for stored credentials
+ * SECURITY IMPLEMENTATION:
+ * - Credentials encrypted with AES-256-GCM before storage
+ * - Random IV per encryption prevents pattern analysis
+ * - Auth tag prevents tampering with stored values
+ *
+ * PRODUCTION NOTES:
+ * - Set CREDENTIAL_ENCRYPTION_KEY env var (32+ chars recommended)
+ * - Consider using secrets manager for the encryption key itself
+ * - Add persistence layer (database) in Phase 16
  */
 const credentialStore = new Map<
   string,
   {
     provider: string
     credentialType: string
-    value: string
+    value: string // Encrypted value
     createdAt: number
   }
 >()
+
+/**
+ * Get decrypted credential for internal use (e.g., validation)
+ * Never expose this in GET response
+ *
+ * @param userKey - User identifier (email)
+ * @returns Decrypted credential data or null
+ */
+function getDecryptedCredential(userKey: string): {
+  provider: string
+  credentialType: string
+  value: string
+} | null {
+  const stored = credentialStore.get(userKey)
+  if (!stored) return null
+
+  try {
+    return {
+      provider: stored.provider,
+      credentialType: stored.credentialType,
+      value: decrypt(stored.value), // Decrypt on retrieval
+    }
+  } catch (error) {
+    console.error(
+      "Failed to decrypt stored credential:",
+      error instanceof Error ? error.message : "Unknown error"
+    )
+    return null
+  }
+}
+
+// Export for internal use by other API routes
+export { getDecryptedCredential }
 
 /**
  * POST /api/ai/credentials
@@ -75,13 +112,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Encrypt credential value before storing
+    let encryptedValue: string
+    try {
+      encryptedValue = encrypt(value)
+    } catch (error) {
+      console.error(
+        "Failed to encrypt credential:",
+        error instanceof Error ? error.message : "Unknown error"
+      )
+      return NextResponse.json(
+        { success: false, error: "Failed to secure credentials" },
+        { status: 500 }
+      )
+    }
+
     // Store credential keyed by user email
-    // In production: Encrypt value before storing
     const userKey = session.user.email
     credentialStore.set(userKey, {
       provider,
       credentialType,
-      value, // TODO: Encrypt in production
+      value: encryptedValue, // Now encrypted at rest
       createdAt: Date.now(),
     })
 
@@ -127,7 +178,7 @@ export async function GET() {
     })
   }
 
-  // Never return the actual value
+  // Never return the actual value (encrypted or decrypted)
   return NextResponse.json({
     provider: credential.provider,
     credentialType: credential.credentialType,
