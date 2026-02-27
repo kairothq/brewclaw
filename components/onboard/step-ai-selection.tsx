@@ -48,6 +48,9 @@ export function StepAISelection({ onContinue, onBack }: StepAISelectionProps) {
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
+  // Saving state
+  const [isSaving, setIsSaving] = useState(false)
+
   const defaultProvider = getDefaultProvider()
   const optionalProviders = getOptionalProviders()
 
@@ -75,15 +78,41 @@ export function StepAISelection({ onContinue, onBack }: StepAISelectionProps) {
     })
   }
 
-  const handleContinue = () => {
+  /**
+   * Store credentials in backend
+   */
+  const storeCredentials = async (creds: ProviderCredentials): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/ai/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: creds.providerId,
+          credentialType: creds.credentialType,
+          value: creds.value,
+        }),
+      })
+      const data = await response.json()
+      return data.success === true
+    } catch {
+      // Non-blocking: log error but allow user to continue
+      console.error("Failed to store credentials")
+      return false
+    }
+  }
+
+  const handleContinue = async () => {
     // BrewClaw doesn't need credentials
     if (selectedProvider === "brewclaw") {
       onContinue(selectedProvider)
       return
     }
 
-    // If credentials are validated, proceed
+    // If credentials are validated, store and proceed
     if (credentials?.validated) {
+      setIsSaving(true)
+      await storeCredentials(credentials)
+      setIsSaving(false)
       onContinue(selectedProvider, credentials)
       return
     }
@@ -92,8 +121,16 @@ export function StepAISelection({ onContinue, onBack }: StepAISelectionProps) {
     setShowConfirmDialog(true)
   }
 
-  const handleConfirmContinue = () => {
+  const handleConfirmContinue = async () => {
     setShowConfirmDialog(false)
+
+    // If we have credentials (even unvalidated), try to store them
+    if (credentials) {
+      setIsSaving(true)
+      await storeCredentials(credentials)
+      setIsSaving(false)
+    }
+
     onContinue(selectedProvider, credentials || undefined)
   }
 
@@ -187,8 +224,20 @@ export function StepAISelection({ onContinue, onBack }: StepAISelectionProps) {
 
       {/* Action buttons */}
       <div className="mt-8 space-y-4">
-        <Button onClick={handleContinue} size="lg" className="w-full">
-          Continue
+        <Button
+          onClick={handleContinue}
+          size="lg"
+          className="w-full"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <span className="flex items-center gap-2">
+              <SpinnerIcon className="w-4 h-4 animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            "Continue"
+          )}
         </Button>
 
         <div className="flex items-center justify-between">
@@ -260,6 +309,27 @@ function CheckIcon({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M5 13l4 4L19 7"
+      />
+    </svg>
+  )
+}
+
+// SpinnerIcon component
+function SpinnerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24">
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
       />
     </svg>
   )
