@@ -9,7 +9,8 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/onboarding', '/settings']
+  // Note: /onboarding is NOT protected - it contains the sign-in form as step 1
+  const protectedRoutes = ['/dashboard', '/settings']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Auth routes (signin, signup) - redirect to dashboard if already logged in

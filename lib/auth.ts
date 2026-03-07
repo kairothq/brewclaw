@@ -16,18 +16,32 @@ const getAdapter = () => {
   return PrismaAdapter(prisma)
 }
 
+// Build providers array conditionally based on available credentials
+const providers = []
+
+// Add Google provider only if credentials are configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  )
+}
+
+// Add Resend provider only if API key is configured
+if (process.env.AUTH_RESEND_KEY) {
+  providers.push(
+    Resend({
+      apiKey: process.env.AUTH_RESEND_KEY,
+      from: process.env.AUTH_RESEND_FROM || "onboarding@resend.dev",
+    })
+  )
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: getAdapter(),
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY!,
-      from: "onboarding@resend.dev", // Use resend.dev for testing
-    }),
-  ],
+  providers,
   pages: {
     signIn: '/signin',
     newUser: '/onboarding',
