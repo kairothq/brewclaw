@@ -39,8 +39,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   )
 }
 
-// Add Resend provider only if API key is configured
-if (process.env.AUTH_RESEND_KEY) {
+// Add Resend provider only if API key AND database are configured
+// Magic link requires a database adapter to store verification tokens
+if (process.env.AUTH_RESEND_KEY && process.env.DATABASE_URL) {
   providers.push(
     Resend({
       apiKey: process.env.AUTH_RESEND_KEY,
