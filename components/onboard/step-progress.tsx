@@ -3,19 +3,22 @@
 import { useOnboardingStore, getStepLabel } from "@/lib/onboarding-store"
 
 interface StepProgressProps {
-  currentStep?: 1 | 2 | 3
+  currentStep?: 1 | 2 | 3 | 4
+  max?: 3 | 4
   className?: string
 }
 
-export function StepProgress({ currentStep: propStep, className = "" }: StepProgressProps) {
+export function StepProgress({ currentStep: propStep, max = 4, className = "" }: StepProgressProps) {
   const storeStep = useOnboardingStore((state) => state.currentStep)
   const currentStep = propStep ?? storeStep
+
+  const steps = Array.from({ length: max }, (_, i) => i + 1)
 
   return (
     <div className={`flex flex-col items-center gap-2 opacity-80 ${className}`}>
       {/* Progress indicator: connected segments with dots and lines */}
       <div className="flex items-center">
-        {[1, 2, 3].map((step, index) => (
+        {steps.map((step, index) => (
           <div key={step} className="flex items-center">
             {/* Dot */}
             <div
@@ -31,7 +34,7 @@ export function StepProgress({ currentStep: propStep, className = "" }: StepProg
             />
 
             {/* Connecting line (not after last dot) */}
-            {index < 2 && (
+            {index < max - 1 && (
               <div
                 className={`
                   w-8 h-0.5 transition-all duration-300
@@ -48,7 +51,7 @@ export function StepProgress({ currentStep: propStep, className = "" }: StepProg
 
       {/* Label */}
       <p className="text-sm text-muted-foreground">
-        Step {currentStep} of 3: {getStepLabel(currentStep)}
+        Step {currentStep} of {max}: {getStepLabel(currentStep as 1 | 2 | 3 | 4)}
       </p>
     </div>
   )

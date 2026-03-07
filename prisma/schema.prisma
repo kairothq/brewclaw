@@ -2,8 +2,7 @@
 // NextAuth.js v5 compatible models
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {

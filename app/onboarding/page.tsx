@@ -10,8 +10,16 @@ import { StepProgress } from "@/components/onboard/step-progress"
 import { StepSignIn } from "@/components/onboard/step-signin"
 import { StepAISelection } from "@/components/onboard/step-ai-selection"
 import { StepTelegram } from "@/components/onboard/step-telegram"
-import { StepSuccessTransition } from "@/components/onboard/step-success-transition"
+import { StepPricing } from "@/components/onboard/step-pricing"
+import { Button } from "@/components/ui/button"
 import type { ProviderType, ProviderCredentials } from "@/types/ai-provider"
+
+// Extend window type for Razorpay
+declare global {
+  interface Window {
+    Razorpay: any
+  }
+}
 
 // Testimonial data
 const testimonial = {
@@ -90,13 +98,21 @@ function LeftPanel() {
   )
 }
 
+type Step = 1 | 2 | 3 | 4 | 5
+
 function OnboardingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, status } = useSession()
   const store = useOnboardingStore()
   const [direction, setDirection] = useState<"forward" | "back">("forward")
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [currentStep, setCurrentStep] = useState<Step>(1)
+
+  // Payment state
+  const [selectedPlan, setSelectedPlan] = useState<string>('')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
 
   // Track entry point from pricing section
   useEffect(() => {
@@ -109,10 +125,23 @@ function OnboardingContent() {
 
   // Auto-advance to step 2 if authenticated and on step 1
   useEffect(() => {
-    if (status === "authenticated" && store.currentStep === 1) {
-      store.setStep(2)
+    if (status === "authenticated" && currentStep === 1) {
+      setCurrentStep(2)
     }
-  }, [status, store.currentStep, store])
+  }, [status, currentStep])
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
+      }
+    }
+  }, [])
 
   // Slide animation variants
   const slideVariants = {
@@ -133,18 +162,20 @@ function OnboardingContent() {
   // Navigation handlers
   const handleNext = () => {
     setDirection("forward")
-    if (store.currentStep < 3) {
-      store.setStep((store.currentStep + 1) as 1 | 2 | 3)
+    if (currentStep < 5) {
+      setCurrentStep((currentStep + 1) as Step)
     }
   }
 
   const handleBack = () => {
     // Don't go back to step 1 if already authenticated
-    if (store.currentStep === 2 && status === "authenticated") {
+    if (currentStep === 2 && status === "authenticated") {
       return
     }
     setDirection("back")
-    store.goBack()
+    if (currentStep > 1) {
+      setCurrentStep((currentStep - 1) as Step)
+    }
   }
 
   // Step 2 completion handler
@@ -165,18 +196,102 @@ function OnboardingContent() {
       botToken: data.botToken,
       telegramUserId: data.userId,
     })
-    setShowSuccess(true)
+    handleNext() // Go to Step 4 (Pricing)
   }
 
-  // Success transition complete handler - redirect to pricing for plan selection/payment
-  const handleSuccessComplete = () => {
-    // Build redirect URL with plan if selected from pricing
-    const params = new URLSearchParams()
-    if (store.selectedPlan) {
-      params.set("plan", store.selectedPlan)
+  // Step 4 completion handler - Payment
+  const handlePlanSelected = async (planId: string, cycle: 'monthly' | 'yearly') => {
+    setSelectedPlan(planId)
+    setBillingCycle(cycle)
+    setIsProcessingPayment(true)
+    setPaymentError('')
+
+    try {
+      // Free plan goes directly to success (no payment needed)
+      if (planId === 'free') {
+        setCurrentStep(5)
+        setIsProcessingPayment(false)
+        store.reset()
+        return
+      }
+
+      // Create subscription
+      const tempUserId = crypto.randomUUID().replace(/-/g, '').substring(0, 16)
+
+      const subRes = await fetch('/api/subscriptions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: tempUserId,
+          email: store.email || session?.user?.email,
+          planId: planId,
+          name: session?.user?.name || 'User',
+          trial: false
+        })
+      })
+
+      const subData = await subRes.json()
+      if (!subData.success) {
+        setPaymentError(subData.error || 'Failed to create subscription')
+        setIsProcessingPayment(false)
+        return
+      }
+
+      // Open Razorpay
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        subscription_id: subData.subscriptionId,
+        name: 'BrewClaw',
+        description: `${planId} Plan`,
+        image: '/logo.png',
+        handler: async function (response: any) {
+          // Verify and provision
+          const verifyRes = await fetch('/api/subscriptions/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+              provisionData: {
+                telegramToken: store.botToken,
+                telegramUserId: store.telegramUserId,
+                aiProvider: store.aiProvider,
+                email: store.email || session?.user?.email,
+                plan: planId
+              }
+            })
+          })
+
+          const verifyData = await verifyRes.json()
+
+          if (verifyData.verified && verifyData.provisioned) {
+            // Success - go to step 5
+            setCurrentStep(5)
+            store.reset()
+          } else {
+            setPaymentError('Payment verification failed')
+          }
+          setIsProcessingPayment(false)
+        },
+        prefill: {
+          email: store.email || session?.user?.email
+        },
+        theme: { color: '#f97316' },
+        modal: {
+          ondismiss: function() {
+            setPaymentError('Payment was cancelled')
+            setIsProcessingPayment(false)
+          }
+        }
+      }
+
+      const razorpay = new window.Razorpay(options)
+      razorpay.open()
+    } catch (e) {
+      setPaymentError('Failed to process payment')
+      setIsProcessingPayment(false)
     }
-    const query = params.toString()
-    router.push(`/pricing${query ? `?${query}` : ""}`)
   }
 
   // Handle logout
@@ -187,7 +302,7 @@ function OnboardingContent() {
 
   // Render current step content
   const renderStep = () => {
-    switch (store.currentStep) {
+    switch (currentStep) {
       case 1:
         if (status === "loading") {
           return (
@@ -213,9 +328,22 @@ function OnboardingContent() {
         return (
           <StepTelegram
             onContinue={handleTelegramContinue}
-            onSkip={() => setShowSuccess(true)}
+            onSkip={() => setCurrentStep(4)}
             onBack={handleBack}
           />
+        )
+
+      case 4:
+        return <StepPricing onContinue={handlePlanSelected} onBack={handleBack} />
+
+      case 5:
+        return (
+          <div className="text-center">
+            <div className="text-6xl mb-6">🎉</div>
+            <h2 className="text-2xl font-bold mb-2 text-white">You're Live!</h2>
+            <p className="text-zinc-400 mb-8">Your AI assistant is ready to chat.</p>
+            <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
+          </div>
         )
 
       default:
@@ -223,17 +351,8 @@ function OnboardingContent() {
     }
   }
 
-  // Show success transition full-page
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen bg-zinc-950">
-        <StepSuccessTransition onComplete={handleSuccessComplete} />
-      </div>
-    )
-  }
-
-  // Step 3 (Telegram) - full width centered layout with video
-  if (store.currentStep === 3) {
+  // Steps 3 (Telegram) and 4 (Pricing) - full width centered layout
+  if (currentStep === 3 || currentStep === 4 || currentStep === 5) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col relative">
         {/* Logo - top left */}
@@ -243,7 +362,7 @@ function OnboardingContent() {
 
         {/* Progress indicator - centered at top */}
         <div className="pt-8 px-8 flex flex-col items-center">
-          <StepProgress />
+          <StepProgress currentStep={currentStep as 1 | 2 | 3 | 4} max={4} />
         </div>
 
         {/* Logout button - top right */}
@@ -262,7 +381,7 @@ function OnboardingContent() {
         <div className="flex-1 flex items-center justify-center px-4 py-8">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
-              key={store.currentStep}
+              key={currentStep}
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -272,7 +391,7 @@ function OnboardingContent() {
                 x: { type: "spring", stiffness: 300, damping: 30 },
                 opacity: { duration: 0.2 },
               }}
-              className="w-full max-w-4xl"
+              className={currentStep === 4 ? "w-full max-w-6xl" : "w-full max-w-4xl"}
             >
               {renderStep()}
             </motion.div>
@@ -297,7 +416,7 @@ function OnboardingContent() {
 
         {/* Progress indicator - centered at top */}
         <div className="pt-8 px-8 flex flex-col items-center">
-          <StepProgress />
+          <StepProgress currentStep={currentStep as 1 | 2 | 3 | 4} max={4} />
         </div>
 
         {/* Logout button - top right */}
@@ -316,7 +435,7 @@ function OnboardingContent() {
         <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
-              key={store.currentStep}
+              key={currentStep}
               custom={direction}
               variants={slideVariants}
               initial="enter"

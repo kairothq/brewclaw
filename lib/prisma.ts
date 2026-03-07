@@ -1,50 +1,25 @@
-import { PrismaClient } from "@prisma/client/edge"
-import { withAccelerate } from "@prisma/extension-accelerate"
+import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { Pool } from "pg"
 
-// Prisma 7 requires passing the connection URL to the client constructor
-// For Prisma Accelerate, use the DATABASE_URL which should point to Accelerate
-
-// Use 'any' type to avoid circular reference issues with extended client
-type ExtendedPrismaClient = any
+// Prisma 7 configuration with PostgreSQL adapter
+// Development: Direct PostgreSQL connection
+// Production: Use Prisma Accelerate (configured via environment)
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: ExtendedPrismaClient | undefined
+  prisma: PrismaClient | undefined
 }
 
-function createPrismaClient(): ExtendedPrismaClient {
-  const databaseUrl = process.env.DATABASE_URL
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL
+  const pool = new Pool({ connectionString })
+  const adapter = new PrismaPg(pool)
 
-  if (!databaseUrl) {
-    throw new Error(
-      "DATABASE_URL environment variable is not set. " +
-      "Please configure it in your Vercel environment variables."
-    )
-  }
-
-  // Prisma 7: Pass accelerateUrl for Prisma Accelerate
-  return new PrismaClient({
-    accelerateUrl: databaseUrl,
-  }).$extends(withAccelerate())
+  return new PrismaClient({ adapter })
 }
 
-// Lazy initialization using a getter
-// This prevents the client from being created until it's actually used
-function getPrismaClient(): ExtendedPrismaClient {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrismaClient()
-  }
-  return globalForPrisma.prisma
-}
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
-// Export a proxy that lazily initializes the client on first property access
-export const prisma = new Proxy({} as ExtendedPrismaClient, {
-  get(_target, prop: string | symbol) {
-    const client = getPrismaClient()
-    const value = client[prop]
-    // If it's a function, bind it to the client
-    if (typeof value === "function") {
-      return value.bind(client)
-    }
-    return value
-  },
-})
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma
+}
