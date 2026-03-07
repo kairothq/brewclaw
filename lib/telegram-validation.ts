@@ -117,8 +117,8 @@ export async function validateUserId(
       if (error.name === "AbortError") {
         return { valid: false, error: "Validation timed out. Please try again." };
       }
+      return { valid: false, error: `Network error: ${error.message}` };
     }
-    // On network error, accept valid format
-    return { valid: true };
+    return { valid: false, error: "Failed to validate user ID. Please try again." };
   }
 }
