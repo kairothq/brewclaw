@@ -244,6 +244,12 @@ function OnboardingContent() {
         name: 'BrewClaw',
         description: `${planId} Plan`,
         image: '/logo.png',
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: false,
+        },
         handler: async function (response: any) {
           // Verify and provision
           const verifyRes = await fetch('/api/subscriptions/verify', {
