@@ -1,17 +1,11 @@
 "use client"
 
-import { useOnboardingStore } from "@/lib/onboarding-store"
+import { useOnboardingStore, getStepLabel } from "@/lib/onboarding-store"
 
 interface StepProgressProps {
   currentStep?: 1 | 2 | 3
   className?: string
 }
-
-const STEP_NAMES = {
-  1: "Sign Up",
-  2: "AI Provider",
-  3: "Telegram",
-} as const
 
 export function StepProgress({ currentStep: propStep, className = "" }: StepProgressProps) {
   const storeStep = useOnboardingStore((state) => state.currentStep)
@@ -54,7 +48,7 @@ export function StepProgress({ currentStep: propStep, className = "" }: StepProg
 
       {/* Label */}
       <p className="text-sm text-muted-foreground">
-        Step {currentStep} of 3: {STEP_NAMES[currentStep]}
+        Step {currentStep} of 3: {getStepLabel(currentStep)}
       </p>
     </div>
   )

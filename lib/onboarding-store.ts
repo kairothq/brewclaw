@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
+// Step labels constant
+export const STEP_LABELS = {
+  1: 'Sign Up',
+  2: 'AI Provider',
+  3: 'Telegram'
+} as const
+
+// Helper function to get step label
+export function getStepLabel(step: 1 | 2 | 3): string {
+  return STEP_LABELS[step]
+}
+
 export interface OnboardingState {
   currentStep: 1 | 2 | 3
 
@@ -67,3 +79,6 @@ export const useOnboardingStore = create<OnboardingState>()(
     }
   )
 )
+
+// Selector for canGoBack - derived state
+export const selectCanGoBack = (state: OnboardingState): boolean => state.currentStep > 1
