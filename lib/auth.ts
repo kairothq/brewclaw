@@ -52,6 +52,10 @@ if (process.env.AUTH_RESEND_KEY) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: getAdapter(),
   providers,
+  // Trust the host header on Vercel (required for preview deployments)
+  trustHost: true,
+  // Enable debug mode in development
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: '/signin',
     newUser: '/onboarding',
