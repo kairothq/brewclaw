@@ -1,42 +1,47 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Space_Grotesk } from "next/font/google";
-import { Providers } from "@/components/providers";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import type { Metadata } from "next"
+import { Space_Grotesk } from "next/font/google"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
+import { Providers } from "@/components/providers"
+import { MotionProvider } from "@/components/providers/motion-provider"
+import { GSAPProvider } from "@/components/providers/gsap-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Navbar } from "@/components/navbar"
+import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  variable: "--font-space-grotesk",
   display: "swap",
-});
+})
 
 export const metadata: Metadata = {
   title: "BrewClaw - Your Personal AI Assistant",
   description: "Deploy your personal AI assistant in under 5 minutes. No code needed.",
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} font-sans antialiased bg-[#0A0A0A] text-white`}
-      >
-        <Providers>{children}</Providers>
+    <html
+      lang="en"
+      className={`${spaceGrotesk.variable} ${GeistSans.variable} ${GeistMono.variable}`}
+    >
+      <body className="font-sans antialiased bg-[#0A0A0A] text-white">
+        <Providers>
+          <MotionProvider>
+            <GSAPProvider>
+              <TooltipProvider>
+                <Navbar />
+                {children}
+              </TooltipProvider>
+            </GSAPProvider>
+          </MotionProvider>
+        </Providers>
       </body>
     </html>
-  );
+  )
 }
