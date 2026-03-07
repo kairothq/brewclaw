@@ -5,11 +5,12 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 export const STEP_LABELS = {
   1: 'Sign In',
   2: 'AI Provider',
-  3: 'Telegram'
+  3: 'Telegram',
+  4: 'Choose Plan'
 } as const
 
 // Helper function to get step label
-export function getStepLabel(step: 1 | 2 | 3): string {
+export function getStepLabel(step: 1 | 2 | 3 | 4): string {
   return STEP_LABELS[step]
 }
 
