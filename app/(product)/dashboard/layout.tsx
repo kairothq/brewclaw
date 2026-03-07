@@ -71,7 +71,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     const urlId = searchParams.get('id')
 
     if (!instanceData && !urlId) {
-      router.push('/onboard')
+      router.push('/onboarding')
       return
     }
 
@@ -106,7 +106,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       setIsLoading(false)
     } catch (e) {
       console.error('Failed to parse instance data:', e)
-      router.push('/onboard')
+      router.push('/onboarding')
     }
   }, [router, searchParams])
 

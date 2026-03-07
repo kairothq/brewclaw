@@ -3,6 +3,16 @@ import Google from "next-auth/providers/google"
 import Resend from "next-auth/providers/resend"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 
+// Validate required env vars at startup
+const missingEnvVars: string[] = []
+if (!process.env.AUTH_SECRET) missingEnvVars.push("AUTH_SECRET")
+if (!process.env.GOOGLE_CLIENT_ID) missingEnvVars.push("GOOGLE_CLIENT_ID")
+if (!process.env.GOOGLE_CLIENT_SECRET) missingEnvVars.push("GOOGLE_CLIENT_SECRET")
+
+if (missingEnvVars.length > 0 && process.env.NODE_ENV === "production") {
+  console.error(`[AUTH ERROR] Missing required environment variables: ${missingEnvVars.join(", ")}`)
+}
+
 // Only import prisma if DATABASE_URL is available
 // This prevents crashes during build and for unauthenticated routes
 const getAdapter = () => {
@@ -16,18 +26,36 @@ const getAdapter = () => {
   return PrismaAdapter(prisma)
 }
 
+// Build providers array conditionally based on available credentials
+const providers = []
+
+// Add Google provider only if credentials are configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  )
+}
+
+// Add Resend provider only if API key is configured
+if (process.env.AUTH_RESEND_KEY) {
+  providers.push(
+    Resend({
+      apiKey: process.env.AUTH_RESEND_KEY,
+      from: process.env.AUTH_RESEND_FROM || "onboarding@resend.dev",
+    })
+  )
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: getAdapter(),
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY!,
-      from: "onboarding@resend.dev", // Use resend.dev for testing
-    }),
-  ],
+  providers,
+  // Trust the host header on Vercel (required for preview deployments)
+  trustHost: true,
+  // Enable debug mode in development
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: '/signin',
     newUser: '/onboarding',
