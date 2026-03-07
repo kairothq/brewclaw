@@ -19,21 +19,36 @@ import Razorpay from 'razorpay'
  * - error?: string
  */
 
+// Validate environment variables
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  console.error('[Subscriptions] Missing Razorpay credentials')
+}
+
 // Initialize Razorpay
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  key_id: process.env.RAZORPAY_KEY_ID || '',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
 })
 
 // Map plan IDs to Razorpay plan IDs
 const RAZORPAY_PLANS: Record<string, string> = {
-  starter: process.env.RAZORPAY_PLAN_STARTER!,
-  pro: process.env.RAZORPAY_PLAN_PRO!,
-  business: process.env.RAZORPAY_PLAN_BUSINESS!,
+  pro: process.env.RAZORPAY_PLAN_PRO || '',
+  team: process.env.RAZORPAY_PLAN_BUSINESS || '',
+  // Fallback for any 'starter' references
+  starter: process.env.RAZORPAY_PLAN_STARTER || '',
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Validate Razorpay configuration
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error('[Subscriptions] Razorpay not configured')
+      return NextResponse.json(
+        { success: false, error: 'Payment system not configured' },
+        { status: 500 }
+      )
+    }
+
     const body = await req.json()
     const { userId, email, planId, name, trial } = body
 
