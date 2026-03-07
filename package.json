@@ -4,21 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@gsap/react": "^2.1.2",
     "@paper-design/shaders": "^0.0.71",
     "@paper-design/shaders-react": "^0.0.71",
-    "@prisma/adapter-better-sqlite3": "^7.4.2",
-    "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
+    "@prisma/extension-accelerate": "^1.3.0",
     "@remotion/cli": "^4.0.434",
     "@remotion/player": "^4.0.434",
-    "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
