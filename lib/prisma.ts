@@ -1,15 +1,22 @@
-import { PrismaClient } from "@prisma/client"
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3"
+import { PrismaClient } from "@prisma/client/edge"
+import { withAccelerate } from "@prisma/extension-accelerate"
 
+// For development, use regular PrismaClient
+// For production (Vercel), use Prisma Accelerate
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  prisma: ReturnType<typeof createPrismaClient> | undefined
 }
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || "file:./prisma/dev.db",
-})
+function createPrismaClient() {
+  // In production, use Prisma Accelerate for edge compatibility
+  if (process.env.NODE_ENV === "production") {
+    return new PrismaClient().$extends(withAccelerate())
+  }
+  // In development, use standard client
+  return new PrismaClient()
+}
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma
