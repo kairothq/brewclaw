@@ -119,7 +119,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={src}
-        className="w-full object-cover"
+        className="w-full h-full object-contain"
         muted
         playsInline
         onPlay={handlePlay}

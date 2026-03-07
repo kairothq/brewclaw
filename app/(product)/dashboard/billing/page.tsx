@@ -1,283 +1,220 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import {
-  CreditCard,
-  Check,
-  Receipt,
-  Download,
-  ArrowUpRight,
-  Calendar,
-  IndianRupee,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from 'react';
+import { CreditCard, Receipt, ArrowRight, Check, Zap } from 'lucide-react';
 
-// Mock data
-const mockSubscription = {
-  plan: "Pro",
-  status: "active",
-  amount: 499,
-  nextBilling: "March 15, 2026",
-  startDate: "February 15, 2026",
-  paymentMethod: "**** 4242",
-}
-
-const mockInvoices = [
+const PLANS = [
   {
-    id: "INV-2026-002",
-    date: "Feb 15, 2026",
-    amount: 499,
-    status: "paid",
-    plan: "Pro",
+    id: 'starter',
+    name: 'Starter',
+    price: '₹199',
+    period: '/month',
+    features: ['1.5GB RAM', 'BYOK (Your API Key)', 'Email Support'],
+    ram: '1.5GB',
+    storage: '10GB'
   },
   {
-    id: "INV-2026-001",
-    date: "Jan 15, 2026",
-    amount: 499,
-    status: "paid",
-    plan: "Pro",
-  },
-]
-
-const plans = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: 199,
-    description: "For casual personal use",
-    features: ["Full Agent abilities", "1.5 GB RAM", "10 GB Storage", "Email support"],
-    current: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: 499,
-    description: "For power users",
-    features: [
-      "Everything in Starter",
-      "3 GB RAM",
-      "20 GB Storage",
-      "Priority support",
-      "More AI credits",
-    ],
-    current: true,
+    id: 'pro',
+    name: 'Pro',
+    price: '₹499',
+    period: '/month',
+    features: ['3GB RAM', 'BYOK (Your API Key)', 'Priority Support'],
     popular: true,
+    ram: '3GB',
+    storage: '20GB'
   },
   {
-    id: "business",
-    name: "Business",
-    price: 1499,
-    description: "For teams and heavy usage",
-    features: [
-      "Everything in Pro",
-      "4 GB RAM",
-      "60 GB Storage",
-      "Dedicated support",
-      "Advanced analytics",
-    ],
-    current: false,
-  },
-]
+    id: 'business',
+    name: 'Business',
+    price: '₹1,499',
+    period: '/month',
+    features: ['4GB RAM', 'BYOK (Your API Key)', 'Priority Support'],
+    ram: '4GB',
+    storage: '60GB'
+  }
+];
 
 export default function BillingPage() {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [currentPlan, setCurrentPlan] = useState('starter');
+  const [subscription, setSubscription] = useState<{
+    status: string;
+    nextBilling: string;
+    startDate: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Mock subscription data - in production, fetch from API
+    setSubscription({
+      status: 'active',
+      nextBilling: 'March 26, 2026',
+      startDate: 'February 26, 2026'
+    });
+  }, []);
+
+  const currentPlanDetails = PLANS.find(p => p.id === currentPlan);
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Billing</h1>
-        <p className="text-muted-foreground">Manage your subscription and payment methods</p>
+    <div className="min-h-screen">
+      {/* Subtle background accent */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/3 rounded-full blur-3xl" />
       </div>
 
-      {/* Current Plan Card */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-              <CreditCard className="w-6 h-6 text-muted-foreground" />
+      <div className="relative max-w-4xl mx-auto">
+        {/* Page Header */}
+        <h1 className="text-2xl font-bold text-white mb-6">Billing</h1>
+
+        {/* Current Subscription */}
+        <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-zinc-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Current Plan</h2>
-              <p className="text-sm text-muted-foreground">
-                Your subscription renews on {mockSubscription.nextBilling}
-              </p>
+              <h2 className="text-lg font-semibold text-white">Current Subscription</h2>
+              <p className="text-sm text-zinc-500">Your active plan and billing details</p>
             </div>
           </div>
-          <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-sm font-medium">
-            {mockSubscription.status}
-          </span>
-        </div>
 
-        <div className="grid sm:grid-cols-3 gap-6 p-6 rounded-lg bg-secondary/30">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Plan</p>
-            <p className="text-xl font-semibold text-foreground">{mockSubscription.plan}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Monthly Cost</p>
-            <p className="text-xl font-semibold text-foreground">
-              <span className="text-lg">₹</span>{mockSubscription.amount}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Payment Method</p>
-            <p className="text-xl font-semibold text-foreground">{mockSubscription.paymentMethod}</p>
-          </div>
-        </div>
-
-        <div className="flex gap-3 mt-6">
-          <Button variant="outline">Update Payment Method</Button>
-          <Button variant="outline" className="text-red-500 border-red-500/20 hover:bg-red-500/10">
-            Cancel Subscription
-          </Button>
-        </div>
-      </div>
-
-      {/* Change Plan */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-2">Change Plan</h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          Upgrade or downgrade your subscription
-        </p>
-
-        <div className="grid md:grid-cols-3 gap-4">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              onClick={() => !plan.current && setSelectedPlan(plan.id)}
-              className={`relative rounded-xl border p-5 transition-all duration-200 ${
-                plan.current
-                  ? "border-emerald-500 bg-emerald-500/5 cursor-default"
-                  : selectedPlan === plan.id
-                  ? "border-foreground bg-secondary cursor-pointer"
-                  : "border-border hover:border-foreground/50 cursor-pointer"
-              }`}
-            >
-              {plan.popular && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  Most Popular
-                </span>
-              )}
-              {plan.current && (
-                <span className="absolute -top-2.5 right-4 bg-foreground text-background text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  Current
-                </span>
-              )}
-
-              <div className="space-y-3">
-                <div>
-                  <h3 className="font-semibold text-foreground">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground">{plan.description}</p>
+          {subscription && (
+            <div className="grid sm:grid-cols-2 gap-6">
+              {/* Plan Info */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-zinc-400">Current Plan</p>
+                    <p className="text-xl font-bold text-white">{currentPlanDetails?.name}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    subscription.status === 'active'
+                      ? 'bg-green-500/10 text-green-400'
+                      : 'bg-yellow-500/10 text-yellow-400'
+                  }`}>
+                    {subscription.status}
+                  </span>
                 </div>
-
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-foreground">₹{plan.price}</span>
-                  <span className="text-muted-foreground">/month</span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Amount</span>
+                    <span className="text-white font-medium">{currentPlanDetails?.price}/month</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">RAM</span>
+                    <span className="text-white">{currentPlanDetails?.ram}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Storage</span>
+                    <span className="text-white">{currentPlanDetails?.storage}</span>
+                  </div>
                 </div>
+              </div>
 
-                <ul className="space-y-2 pt-3 border-t border-border">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                {!plan.current && (
-                  <Button
-                    variant={selectedPlan === plan.id ? "default" : "outline"}
-                    className="w-full mt-2"
-                    size="sm"
-                  >
-                    {plan.price > mockSubscription.amount ? "Upgrade" : "Downgrade"}
-                  </Button>
-                )}
+              {/* Billing Info */}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <p className="text-sm text-zinc-400 mb-4">Billing Details</p>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Started</span>
+                    <span className="text-white">{subscription.startDate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Next billing</span>
+                    <span className="text-white">{subscription.nextBilling}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Payment method</span>
+                    <span className="text-white">Razorpay</span>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
+        </section>
 
-      {/* Billing History */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-              <Receipt className="w-5 h-5 text-muted-foreground" />
+        {/* Upgrade Plans */}
+        <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-zinc-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Billing History</h2>
-              <p className="text-sm text-muted-foreground">Download your past invoices</p>
+              <h2 className="text-lg font-semibold text-white">Upgrade Plan</h2>
+              <p className="text-sm text-zinc-500">Get more resources and features</p>
             </div>
           </div>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left text-sm font-medium text-muted-foreground py-3 pr-4">
-                  Invoice
-                </th>
-                <th className="text-left text-sm font-medium text-muted-foreground py-3 pr-4">
-                  Date
-                </th>
-                <th className="text-left text-sm font-medium text-muted-foreground py-3 pr-4">
-                  Plan
-                </th>
-                <th className="text-left text-sm font-medium text-muted-foreground py-3 pr-4">
-                  Amount
-                </th>
-                <th className="text-left text-sm font-medium text-muted-foreground py-3 pr-4">
-                  Status
-                </th>
-                <th className="text-right text-sm font-medium text-muted-foreground py-3">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockInvoices.map((invoice) => (
-                <tr key={invoice.id} className="border-b border-border last:border-0">
-                  <td className="py-4 pr-4">
-                    <span className="text-sm font-medium text-foreground">{invoice.id}</span>
-                  </td>
-                  <td className="py-4 pr-4">
-                    <span className="text-sm text-muted-foreground">{invoice.date}</span>
-                  </td>
-                  <td className="py-4 pr-4">
-                    <span className="text-sm text-foreground">{invoice.plan}</span>
-                  </td>
-                  <td className="py-4 pr-4">
-                    <span className="text-sm text-foreground">₹{invoice.amount}</span>
-                  </td>
-                  <td className="py-4 pr-4">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500">
-                      {invoice.status}
+          <div className="grid sm:grid-cols-3 gap-4">
+            {PLANS.map((plan) => {
+              const isCurrent = plan.id === currentPlan;
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative rounded-xl border p-4 transition-all duration-200 ${
+                    isCurrent
+                      ? 'border-orange-500 bg-orange-500/5'
+                      : 'border-zinc-700 hover:border-zinc-600'
+                  }`}
+                >
+                  {plan.popular && (
+                    <span className="absolute -top-2 right-4 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      Most Popular
                     </span>
-                  </td>
-                  <td className="py-4 text-right">
-                    <Button variant="ghost" size="sm" className="h-8 px-2">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {mockInvoices.length > 5 && (
-          <div className="mt-4 text-center">
-            <Button variant="ghost" size="sm">
-              View all invoices
-              <ArrowUpRight className="w-4 h-4 ml-1" />
-            </Button>
+                  )}
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-white">{plan.name}</h3>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-2xl font-bold text-white">{plan.price}</span>
+                      <span className="text-sm text-zinc-400">{plan.period}</span>
+                    </div>
+                  </div>
+                  <ul className="space-y-2 mb-4">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm text-zinc-400">
+                        <Check className="w-4 h-4 text-green-500" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  {isCurrent ? (
+                    <button
+                      disabled
+                      className="w-full py-2 rounded-lg bg-zinc-800 text-zinc-500 text-sm font-medium cursor-not-allowed"
+                    >
+                      Current Plan
+                    </button>
+                  ) : (
+                    <button className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                      Upgrade <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
+        </section>
+
+        {/* Billing History */}
+        <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+              <Receipt className="w-5 h-5 text-zinc-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Billing History</h2>
+              <p className="text-sm text-zinc-500">Your past invoices and receipts</p>
+            </div>
+          </div>
+
+          <div className="text-center py-8">
+            <Receipt className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+            <p className="text-zinc-400">No billing history yet</p>
+            <p className="text-sm text-zinc-500 mt-1">
+              Your invoices will appear here after your first payment
+            </p>
+          </div>
+        </section>
       </div>
     </div>
-  )
+  );
 }

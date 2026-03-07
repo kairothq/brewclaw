@@ -1,522 +1,942 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Check, ChevronRight, Play, X, Sparkles, MessageCircle, Bot, CreditCard } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState, Suspense, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 
-// Step indicator component
-function StepIndicator({ steps, currentStep }: { steps: string[]; currentStep: number }) {
-  return (
-    <div className="flex items-center justify-center gap-2 mb-12">
-      {steps.map((step, index) => (
-        <div key={step} className="flex items-center">
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                index < currentStep
-                  ? "bg-emerald-500 text-white"
-                  : index === currentStep
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {index < currentStep ? <Check className="w-5 h-5" /> : index + 1}
-            </div>
-            <span className={`text-xs mt-2 ${index === currentStep ? "text-foreground" : "text-muted-foreground"}`}>
-              {step}
-            </span>
-          </div>
-          {index < steps.length - 1 && (
-            <div className={`w-16 h-0.5 mx-2 mb-6 ${index < currentStep ? "bg-emerald-500" : "bg-border"}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  )
+// Helper to set cookie fallback for Brave browser
+function setCookie(name: string, value: string, days: number = 30) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`
 }
 
-// Video modal component
-function VideoModal({ isOpen, onClose, platform }: { isOpen: boolean; onClose: () => void; platform: string }) {
-  if (!isOpen) return null
+type Step = 'email' | 'telegram' | 'token' | 'userid' | 'ai' | 'plan' | 'payment' | 'deploy' | 'done'
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-xl w-full max-w-2xl mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="font-semibold">How to set up {platform}</h3>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="aspect-video bg-secondary flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <Play className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <p>Tutorial video placeholder</p>
-            <p className="text-sm mt-2">Video will show how to create a {platform} bot</p>
-          </div>
-        </div>
-        <div className="p-4 border-t border-border">
-          <Button onClick={onClose} className="w-full">Got it, continue</Button>
-        </div>
-      </div>
-    </div>
-  )
+const STEPS = ['email', 'telegram', 'token', 'userid', 'ai', 'plan', 'payment', 'done']
+
+const PLANS = [
+  { id: 'free', name: 'Free Trial', price: '₹0', period: '7 days', features: ['1.5GB RAM', 'BYOK (Your API Key)', 'Test your bot'] },
+  { id: 'starter', name: 'Starter', price: '₹199', period: '/month', features: ['1.5GB RAM', 'BYOK (Your API Key)', 'Email Support'], popular: false },
+  { id: 'pro', name: 'Pro', price: '₹499', period: '/month', features: ['3GB RAM', 'BYOK (Your API Key)', 'Priority Support'], popular: true },
+  { id: 'business', name: 'Business', price: '₹1,499', period: '/month', features: ['4GB RAM', 'BYOK (Your API Key)', 'Priority Support'] }
+]
+
+declare global {
+  interface Window {
+    Razorpay: any
+  }
 }
 
-// Step 1: Select Plan
-function SelectPlanStep({ onSelect }: { onSelect: (plan: string) => void }) {
-  const plans = [
-    {
-      id: "starter",
-      name: "Starter",
-      price: "₹199",
-      period: "/month",
-      description: "For casual personal use",
-      features: ["Full Agent abilities", "1.5 GB RAM", "10 GB Storage", "Email support"],
-      popular: false,
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: "₹499",
-      period: "/month",
-      description: "For power users",
-      features: ["Everything in Starter", "3 GB RAM", "20 GB Storage", "Priority support", "More AI credits"],
-      popular: true,
-    },
-    {
-      id: "business",
-      name: "Business",
-      price: "₹1,499",
-      period: "/month",
-      description: "For teams and heavy usage",
-      features: ["Everything in Pro", "4 GB RAM", "60 GB Storage", "Dedicated support", "Advanced analytics"],
-      popular: false,
-    },
-  ]
+function OnboardContent() {
+  const searchParams = useSearchParams()
+  const initialPlan = searchParams.get('plan') || 'free'
+
+  const [step, setStep] = useState<Step>('email')
+  const [email, setEmail] = useState('')
+  const [telegramToken, setTelegramToken] = useState('')
+  const [telegramUserId, setTelegramUserId] = useState('')
+  const [aiProvider, setAiProvider] = useState('gemini')
+  const [apiKey, setApiKey] = useState('')
+  const [selectedPlan, setSelectedPlan] = useState(initialPlan)
+  const [isValidating, setIsValidating] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [error, setError] = useState('')
+  const [result, setResult] = useState<{ userId: string; subdomain: string; url: string } | null>(null)
+  const [botInfo, setBotInfo] = useState<{ username: string } | null>(null)
+  const [userId, setUserId] = useState('')
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => {
+      document.body.removeChild(script)
+    }
+  }, [])
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  const validateToken = async () => {
+    setIsValidating(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/validate-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: telegramToken })
+      })
+
+      const data = await res.json()
+
+      if (data.valid) {
+        setBotInfo(data.bot)
+        setStep('userid')
+      } else {
+        setError(data.error || 'Invalid token')
+      }
+    } catch (e) {
+      setError('Failed to validate token')
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  const handlePlanContinue = async () => {
+    // All plans now go through payment for card/UPI auth
+    // Free trial = deferred billing (no charge for 7 days)
+    setStep('payment')
+  }
+
+  const initiatePayment = async () => {
+    setIsProcessingPayment(true)
+    setError('')
+
+    try {
+      // Store provision data temporarily - container will be created AFTER payment succeeds
+      const pendingProvision = {
+        telegramToken,
+        telegramUserId,
+        aiProvider,
+        apiKey,
+        email,
+        plan: selectedPlan
+      }
+      sessionStorage.setItem('pending_provision', JSON.stringify(pendingProvision))
+
+      // Generate temp userId for subscription notes (actual userId created after payment)
+      const tempUserId = crypto.randomUUID().replace(/-/g, '').substring(0, 16)
+
+      // Create subscription ONLY (no container provisioning yet)
+      const isTrial = selectedPlan === 'free'
+      const subRes = await fetch('/api/subscriptions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: tempUserId,
+          email,
+          planId: isTrial ? 'starter' : selectedPlan,
+          name: email.split('@')[0],
+          trial: isTrial
+        })
+      })
+
+      const subData = await subRes.json()
+
+      if (!subData.success) {
+        sessionStorage.removeItem('pending_provision')
+        setError(subData.error || 'Failed to create subscription')
+        setIsProcessingPayment(false)
+        return
+      }
+
+      // Open Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        subscription_id: subData.subscriptionId,
+        name: 'BrewClaw',
+        description: `${PLANS.find(p => p.id === selectedPlan)?.name} Plan`,
+        image: '/logo.png',
+        handler: async function (response: any) {
+          // Retrieve provision data
+          const storedProvision = sessionStorage.getItem('pending_provision')
+          const provisionData = storedProvision ? JSON.parse(storedProvision) : null
+
+          // Verify payment AND provision container (container created only after payment confirmed)
+          const verifyRes = await fetch('/api/subscriptions/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+              provisionData
+            })
+          })
+
+          const verifyData = await verifyRes.json()
+          sessionStorage.removeItem('pending_provision')
+
+          if (verifyData.verified && verifyData.provisioned) {
+            // Container successfully created AFTER payment
+            const instanceData = JSON.stringify({
+              userId: verifyData.userId,
+              botUsername: botInfo?.username,
+              subdomain: verifyData.subdomain,
+              url: verifyData.url,
+              email: email,
+              name: email.split('@')[0]
+            })
+            localStorage.setItem('brewclaw_instance', instanceData)
+            // Set cookie fallback for Brave browser
+            setCookie('brewclaw_instance', instanceData)
+            setUserId(verifyData.userId)
+            setResult({
+              userId: verifyData.userId,
+              subdomain: verifyData.subdomain,
+              url: verifyData.url
+            })
+            setStep('done')
+          } else if (verifyData.verified && !verifyData.provisioned) {
+            // Payment OK but provisioning failed - critical issue
+            setError('Payment successful but container failed to start. Please contact support.')
+          } else {
+            setError('Payment verification failed. Please contact support.')
+          }
+          setIsProcessingPayment(false)
+        },
+        prefill: {
+          email: email
+        },
+        theme: {
+          color: '#f97316'
+        },
+        modal: {
+          ondismiss: function() {
+            // User cancelled - no container was created, clean up session data
+            sessionStorage.removeItem('pending_provision')
+            setIsProcessingPayment(false)
+            setError('Payment was cancelled. You can try again.')
+          }
+        }
+      }
+
+      const razorpay = new window.Razorpay(options)
+      razorpay.open()
+    } catch (e) {
+      console.error('Payment error:', e)
+      sessionStorage.removeItem('pending_provision')
+      setError('Failed to process payment. Please try again.')
+      setIsProcessingPayment(false)
+    }
+  }
+
+  const deploy = async () => {
+    setIsDeploying(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/provision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramToken,
+          telegramUserId,
+          aiProvider,
+          apiKey,
+          email,
+          plan: 'free'
+        })
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        const instanceData = JSON.stringify({
+          userId: data.userId,
+          botUsername: botInfo?.username,
+          subdomain: data.subdomain,
+          url: data.url,
+          email: email,
+          name: email.split('@')[0]
+        })
+        localStorage.setItem('brewclaw_instance', instanceData)
+        // Set cookie fallback for Brave browser
+        setCookie('brewclaw_instance', instanceData)
+        setResult(data)
+        setStep('done')
+      } else {
+        setError(data.error || 'Deployment failed')
+      }
+    } catch (e) {
+      setError('Failed to deploy')
+    } finally {
+      setIsDeploying(false)
+    }
+  }
+
+  const currentStepIndex = STEPS.indexOf(step)
+  // All plans now go through payment (free trial uses deferred billing)
+  const isPaidPlan = true
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">Choose your plan</h1>
-        <p className="text-muted-foreground mt-2">Select the plan that best fits your needs. You can upgrade anytime.</p>
+    <div className="mx-auto max-w-2xl">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-3xl font-bold text-white">Deploy Your AI Assistant</h1>
+        <p className="text-zinc-400 mt-2">
+          {selectedPlan === 'free' ? '7-day free trial' : `${PLANS.find(p => p.id === selectedPlan)?.name} Plan`}
+        </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        {plans.map((plan) => (
-          <div
-            key={plan.id}
-            className={`relative rounded-xl border p-6 transition-all duration-200 hover:border-foreground/50 cursor-pointer ${
-              plan.popular ? "border-emerald-500 bg-emerald-500/5" : "border-border bg-card"
-            }`}
-            onClick={() => onSelect(plan.id)}
-          >
-            {plan.popular && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-medium px-3 py-1 rounded-full">
-                Most Popular
-              </span>
-            )}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground">{plan.description}</p>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                <span className="text-muted-foreground">{plan.period}</span>
-              </div>
-              <ul className="space-y-2">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant={plan.popular ? "default" : "outline"}
-                className="w-full"
-                onClick={() => onSelect(plan.id)}
-              >
-                Select {plan.name}
-              </Button>
+      {/* Progress */}
+      <div className="flex items-center justify-center gap-1 mb-12 overflow-x-auto">
+        {STEPS.filter(s => isPaidPlan || s !== 'payment').map((s, i) => (
+          <div key={s} className="flex items-center">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
+              step === s ? 'bg-orange-500' :
+              currentStepIndex > STEPS.indexOf(s) ? 'bg-green-500' : 'bg-zinc-800'
+            }`}>
+              {currentStepIndex > STEPS.indexOf(s) ? '✓' : i + 1}
             </div>
+            {i < (isPaidPlan ? STEPS.length - 1 : STEPS.length - 2) && <div className="w-6 h-0.5 bg-zinc-800" />}
           </div>
         ))}
       </div>
-    </div>
-  )
-}
 
-// Step 2: Choose Platform
-function ChoosePlatformStep({ onSelect }: { onSelect: (platform: string) => void }) {
-  const [videoModal, setVideoModal] = useState<string | null>(null)
+      {/* Step Content */}
+      <div className="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
 
-  const platforms = [
-    {
-      id: "telegram",
-      name: "Telegram",
-      description: "Most popular choice",
-      icon: MessageCircle,
-      available: true,
-    },
-    {
-      id: "whatsapp",
-      name: "WhatsApp",
-      description: "Coming soon",
-      icon: MessageCircle,
-      available: false,
-    },
-    {
-      id: "discord",
-      name: "Discord",
-      description: "Coming soon",
-      icon: MessageCircle,
-      available: false,
-    },
-  ]
+        {/* Step 1: Email */}
+        {step === 'email' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-white">Step 1: Your Email</h2>
 
-  return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">Choose your platform</h1>
-        <p className="text-muted-foreground mt-2">Select where you want your AI assistant to live</p>
-      </div>
-
-      <div className="grid gap-4">
-        {platforms.map((platform) => (
-          <div
-            key={platform.id}
-            className={`relative rounded-xl border p-6 transition-all duration-200 ${
-              platform.available
-                ? "border-border bg-card hover:border-foreground/50 cursor-pointer"
-                : "border-border/50 bg-card/50 opacity-60 cursor-not-allowed"
-            }`}
-            onClick={() => platform.available && setVideoModal(platform.name)}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  platform.available ? "bg-secondary" : "bg-secondary/50"
-                }`}>
-                  <platform.icon className="w-6 h-6 text-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">{platform.name}</h3>
-                  <p className="text-sm text-muted-foreground">{platform.description}</p>
-                </div>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+                />
+                <p className="text-sm text-zinc-500 mt-2">
+                  We&apos;ll send deployment updates and payment receipts here
+                </p>
               </div>
-              {platform.available && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Watch tutorial</span>
-                  <Play className="w-5 h-5 text-muted-foreground" />
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-3 text-red-400">
+                  {error}
                 </div>
               )}
+
+              <button
+                onClick={() => {
+                  if (!validateEmail(email)) {
+                    setError('Please enter a valid email address')
+                    return
+                  }
+                  setError('')
+                  setStep('telegram')
+                }}
+                disabled={!email}
+                className="w-full bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continue →
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      <VideoModal
-        isOpen={!!videoModal}
-        onClose={() => {
-          setVideoModal(null)
-          onSelect("telegram")
-        }}
-        platform={videoModal || ""}
-      />
+        {/* Step 2: Create Telegram Bot */}
+        {step === 'telegram' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-white">Step 2: Create Telegram Bot</h2>
 
-      <p className="text-center text-sm text-muted-foreground">
-        Click on a platform to see the setup tutorial, then continue to the next step
-      </p>
-    </div>
-  )
-}
-
-// Step 3: Choose AI Provider
-function ChooseAIStep({ onSelect }: { onSelect: (ai: string, apiKey?: string) => void }) {
-  const [selectedAI, setSelectedAI] = useState<string | null>(null)
-  const [apiKey, setApiKey] = useState("")
-  const [useOwnKey, setUseOwnKey] = useState(true)
-
-  const providers = [
-    {
-      id: "gemini",
-      name: "Google Gemini",
-      description: "Great for general tasks",
-      icon: Sparkles,
-      docsUrl: "https://makersuite.google.com/app/apikey",
-    },
-    {
-      id: "openai",
-      name: "OpenAI (GPT-4)",
-      description: "Most capable model",
-      icon: Bot,
-      docsUrl: "https://platform.openai.com/api-keys",
-    },
-    {
-      id: "anthropic",
-      name: "Anthropic (Claude)",
-      description: "Best for reasoning",
-      icon: Bot,
-      docsUrl: "https://console.anthropic.com/settings/keys",
-    },
-  ]
-
-  const selectedProvider = providers.find((p) => p.id === selectedAI)
-
-  return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">Choose your AI</h1>
-        <p className="text-muted-foreground mt-2">Select an AI provider to power your assistant</p>
-      </div>
-
-      {/* AI Provider Selection */}
-      <div className="grid gap-3">
-        {providers.map((provider) => (
-          <div
-            key={provider.id}
-            className={`rounded-xl border p-4 transition-all duration-200 cursor-pointer ${
-              selectedAI === provider.id
-                ? "border-foreground bg-secondary"
-                : "border-border bg-card hover:border-foreground/50"
-            }`}
-            onClick={() => setSelectedAI(provider.id)}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center">
-                <provider.icon className="w-5 h-5 text-foreground" />
+            <div className="space-y-6">
+              <div className="bg-zinc-800 rounded-xl p-6">
+                <h3 className="font-semibold mb-4 text-white">Follow these steps:</h3>
+                <ol className="space-y-4 text-zinc-300">
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">1</span>
+                    <span>Open Telegram and search for <code className="bg-zinc-700 px-2 py-0.5 rounded">@BotFather</code></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">2</span>
+                    <span>Send the command <code className="bg-zinc-700 px-2 py-0.5 rounded">/newbot</code></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">3</span>
+                    <span>Choose a name for your bot (e.g., &quot;My AI Assistant&quot;)</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">4</span>
+                    <span>Choose a username ending in <code className="bg-zinc-700 px-2 py-0.5 rounded">_bot</code></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">5</span>
+                    <span>Copy the <strong>API token</strong> BotFather gives you</span>
+                  </li>
+                </ol>
               </div>
-              <div className="flex-1">
-                <h3 className="font-medium text-foreground">{provider.name}</h3>
-                <p className="text-sm text-muted-foreground">{provider.description}</p>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 ${
-                selectedAI === provider.id ? "border-foreground bg-foreground" : "border-muted-foreground"
-              }`}>
-                {selectedAI === provider.id && <Check className="w-4 h-4 text-background" />}
+
+              <a
+                href="https://t.me/BotFather"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-blue-500 text-white py-3 rounded-lg text-center font-semibold hover:bg-blue-400 transition-colors"
+              >
+                Open @BotFather →
+              </a>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('email')}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep('token')}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors"
+                >
+                  I have my token →
+                </button>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* API Key or Skip Option */}
-      {selectedAI && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex gap-2">
-            <button
-              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                useOwnKey ? "bg-foreground text-background" : "bg-secondary text-foreground"
-              }`}
-              onClick={() => setUseOwnKey(true)}
-            >
-              Use my API key
-            </button>
-            <button
-              className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
-                !useOwnKey ? "bg-foreground text-background" : "bg-secondary text-foreground"
-              }`}
-              onClick={() => setUseOwnKey(false)}
-            >
-              Get AI from Brewclaw
-            </button>
-          </div>
+        {/* Step 3: Enter Token */}
+        {step === 'token' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-white">Step 3: Enter Your Bot Token</h2>
 
-          {useOwnKey ? (
-            <div className="space-y-3">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  {selectedProvider?.name} API Key
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Telegram Bot Token
+                </label>
+                <input
+                  type="text"
+                  value={telegramToken}
+                  onChange={(e) => setTelegramToken(e.target.value)}
+                  placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+                />
+                <p className="text-sm text-zinc-500 mt-2">
+                  Paste the token you received from @BotFather
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-3 text-red-400">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('telegram')}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={validateToken}
+                  disabled={!telegramToken || isValidating}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isValidating ? 'Validating...' : 'Validate Token →'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Your Telegram ID */}
+        {step === 'userid' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-2 text-white">Step 4: Your Telegram ID</h2>
+            {botInfo && (
+              <p className="text-green-400 mb-6">✓ Bot validated: @{botInfo.username}</p>
+            )}
+
+            <div className="space-y-6">
+              <div className="bg-zinc-800 rounded-xl p-6">
+                <h3 className="font-semibold mb-4 text-white">How to get your Telegram ID:</h3>
+                <ol className="space-y-4 text-zinc-300">
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">1</span>
+                    <span>Open Telegram and message <code className="bg-zinc-700 px-2 py-0.5 rounded">@userinfobot</code></span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">2</span>
+                    <span>It will reply with your user ID (a number like <code className="bg-zinc-700 px-2 py-0.5 rounded">123456789</code>)</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm flex-shrink-0">3</span>
+                    <span>Copy and paste that number below</span>
+                  </li>
+                </ol>
+              </div>
+
+              <a
+                href="https://t.me/userinfobot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-blue-500 text-white py-3 rounded-lg text-center font-semibold hover:bg-blue-400 transition-colors"
+              >
+                Open @userinfobot →
+              </a>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  Your Telegram User ID
+                </label>
+                <input
+                  type="text"
+                  value={telegramUserId}
+                  onChange={(e) => setTelegramUserId(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456789"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+                />
+                <p className="text-sm text-zinc-500 mt-2">
+                  This ensures only YOU can chat with your bot
+                </p>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('token')}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep('ai')}
+                  disabled={!telegramUserId}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continue →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Choose AI */}
+        {step === 'ai' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-2 text-white">Step 5: Choose Your AI</h2>
+            {botInfo && (
+              <p className="text-green-400 mb-6">✓ Bot validated: @{botInfo.username}</p>
+            )}
+
+            <div className="space-y-6">
+              <div className="space-y-3">
+                {[
+                  { id: 'gemini', name: 'Google Gemini', desc: 'Gemini 2.0 Flash — Fast & affordable', recommended: true },
+                  { id: 'openai', name: 'OpenAI', desc: 'GPT-4o — Most popular choice' },
+                  { id: 'anthropic', name: 'Anthropic', desc: 'Claude — Best for reasoning & code' }
+                ].map((provider) => (
+                  <button
+                    key={provider.id}
+                    onClick={() => setAiProvider(provider.id)}
+                    className={`w-full text-left p-4 rounded-xl border ${
+                      aiProvider === provider.id
+                        ? 'border-orange-500 bg-orange-500/10'
+                        : 'border-zinc-700 hover:border-zinc-600'
+                    } transition-colors`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-white">{provider.name}</div>
+                        <div className="text-sm text-zinc-400">{provider.desc}</div>
+                      </div>
+                      {provider.recommended && (
+                        <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full">
+                          Recommended
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Gemini instructions */}
+              {aiProvider === 'gemini' && (
+                <div className="bg-zinc-800 rounded-xl p-6">
+                  <h3 className="font-semibold mb-4 text-white">Get your Gemini API key:</h3>
+                  <ol className="space-y-3 text-zinc-300 text-sm">
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">1</span>
+                      <span>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-orange-400 underline">aistudio.google.com/apikey</a></span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">2</span>
+                      <span>Sign in with Google and click &quot;Create API key&quot;</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">3</span>
+                      <span>Copy the key and paste below</span>
+                    </li>
+                  </ol>
+                  <p className="text-xs text-zinc-500 mt-4">
+                    Free tier: 1,500 requests/day. Paid: ~$0.50/1M tokens
+                  </p>
+                </div>
+              )}
+
+              {/* OpenAI instructions */}
+              {aiProvider === 'openai' && (
+                <div className="bg-zinc-800 rounded-xl p-6">
+                  <h3 className="font-semibold mb-4 text-white">Get your OpenAI API key:</h3>
+                  <ol className="space-y-3 text-zinc-300 text-sm">
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">1</span>
+                      <span>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-orange-400 underline">platform.openai.com/api-keys</a></span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">2</span>
+                      <span>Sign in and click &quot;Create new secret key&quot;</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">3</span>
+                      <span>Copy the key (starts with sk-)</span>
+                    </li>
+                  </ol>
+                  <p className="text-xs text-zinc-500 mt-4">
+                    Pricing: ~$5/1M input tokens, ~$15/1M output tokens (GPT-4o)
+                  </p>
+                </div>
+              )}
+
+              {/* Anthropic instructions */}
+              {aiProvider === 'anthropic' && (
+                <div className="bg-zinc-800 rounded-xl p-6">
+                  <h3 className="font-semibold mb-4 text-white">Get your Anthropic API key:</h3>
+                  <ol className="space-y-3 text-zinc-300 text-sm">
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">1</span>
+                      <span>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-orange-400 underline">console.anthropic.com/settings/keys</a></span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">2</span>
+                      <span>Sign in and click &quot;Create Key&quot;</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0">3</span>
+                      <span>Copy the key (starts with sk-ant-)</span>
+                    </li>
+                  </ol>
+                  <p className="text-xs text-zinc-500 mt-4">
+                    Pricing: ~$3/1M input, ~$15/1M output (Claude Sonnet)
+                  </p>
+                </div>
+              )}
+
+              {/* API Key input - BYOK required */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  {aiProvider === 'gemini' ? 'Google Gemini' :
+                   aiProvider === 'anthropic' ? 'Anthropic' : 'OpenAI'} API Key
+                  <span className="text-orange-400 ml-1">*</span>
                 </label>
                 <input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="w-full px-4 py-3 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder={
+                    aiProvider === 'gemini' ? 'AIza...' :
+                    aiProvider === 'anthropic' ? 'sk-ant-...' : 'sk-...'
+                  }
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
                 />
-              </div>
-              <a
-                href={selectedProvider?.docsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-              >
-                Get your API key from {selectedProvider?.name}
-                <ChevronRight className="w-4 h-4" />
-              </a>
-              <Button
-                className="w-full"
-                disabled={!apiKey}
-                onClick={() => onSelect(selectedAI, apiKey)}
-              >
-                Continue with my key
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4">
-                <p className="text-sm text-foreground">
-                  <strong>Brewclaw Credits:</strong> We'll provide AI credits as part of your subscription.
-                  No API key setup required!
+                <p className="text-xs text-zinc-500 mt-2">
+                  Your key is stored securely and used only for your bot. You pay the provider directly.
                 </p>
               </div>
-              <Button className="w-full" onClick={() => onSelect(selectedAI)}>
-                Continue with Brewclaw credits
-              </Button>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('userid')}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep('plan')}
+                  disabled={!apiKey}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continue →
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+
+        {/* Step 6: Choose Plan */}
+        {step === 'plan' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-white">Step 6: Choose Your Plan</h2>
+
+            <div className="space-y-6">
+              <div className="grid gap-4">
+                {PLANS.map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan.id)}
+                    className={`w-full text-left p-4 rounded-xl border ${
+                      selectedPlan === plan.id
+                        ? 'border-orange-500 bg-orange-500/10'
+                        : 'border-zinc-700 hover:border-zinc-600'
+                    } transition-colors relative`}
+                  >
+                    {plan.popular && (
+                      <span className="absolute -top-2 right-4 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        Most Popular
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-lg text-white">{plan.name}</div>
+                        <div className="text-sm text-zinc-400 mt-1">
+                          {plan.features.join(' • ')}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-white">{plan.price}</div>
+                        <div className="text-sm text-zinc-400">{plan.period}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-3 text-red-400">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('ai')}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handlePlanContinue}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors"
+                >
+                  {selectedPlan === 'free' ? 'Continue to Verify Payment →' : 'Continue to Payment →'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 7: Payment (for all plans - free trial uses deferred billing) */}
+        {step === 'payment' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-white">
+              {selectedPlan === 'free' ? 'Step 7: Verify Payment Method' : 'Step 7: Complete Payment'}
+            </h2>
+
+            <div className="space-y-6">
+              {/* Free trial info banner */}
+              {selectedPlan === 'free' && (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-sm text-green-300">
+                  <p className="font-semibold mb-1">7-Day Free Trial</p>
+                  <p>We&apos;ll verify your payment method but won&apos;t charge you today. After 7 days, you&apos;ll be charged ₹199/month (Starter plan). Cancel anytime.</p>
+                </div>
+              )}
+
+              <div className="bg-zinc-800 rounded-xl p-6">
+                <h3 className="font-semibold mb-4 text-white">Order Summary</h3>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">Plan</dt>
+                    <dd className="font-semibold text-white">
+                      {selectedPlan === 'free' ? '7-Day Free Trial → Starter' : PLANS.find(p => p.id === selectedPlan)?.name}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">Telegram Bot</dt>
+                    <dd className="text-white">@{botInfo?.username}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">Email</dt>
+                    <dd className="text-white">{email}</dd>
+                  </div>
+                  <div className="border-t border-zinc-700 pt-3 mt-3">
+                    {selectedPlan === 'free' ? (
+                      <>
+                        <div className="flex justify-between text-lg">
+                          <dt className="font-semibold text-white">Today</dt>
+                          <dd className="font-bold text-green-400">₹0</dd>
+                        </div>
+                        <div className="flex justify-between text-sm text-zinc-400 mt-1">
+                          <dt>After 7 days</dt>
+                          <dd>₹199/month</dd>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between text-lg">
+                        <dt className="font-semibold text-white">Total</dt>
+                        <dd className="font-bold text-orange-400">
+                          {PLANS.find(p => p.id === selectedPlan)?.price}/month
+                        </dd>
+                      </div>
+                    )}
+                  </div>
+                </dl>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm text-blue-300">
+                <p>Your subscription will auto-renew monthly. Cancel anytime from your dashboard.</p>
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-3 text-red-400">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('plan')}
+                  disabled={isProcessingPayment}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={initiatePayment}
+                  disabled={isProcessingPayment}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors disabled:opacity-50"
+                >
+                  {isProcessingPayment ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : selectedPlan === 'free' ? (
+                    'Start Free Trial →'
+                  ) : (
+                    'Pay with Razorpay →'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 8: Deploy (for free plan) */}
+        {step === 'deploy' && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-white">Step 7: Deploy Your Assistant</h2>
+
+            <div className="space-y-6">
+              <div className="bg-zinc-800 rounded-xl p-6">
+                <h3 className="font-semibold mb-4 text-white">Summary</h3>
+                <dl className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">Email</dt>
+                    <dd className="text-white">{email}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">Telegram Bot</dt>
+                    <dd className="text-white">@{botInfo?.username}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">AI Provider</dt>
+                    <dd className="text-white">{aiProvider === 'gemini' ? 'Google Gemini' :
+                         aiProvider === 'anthropic' ? 'Anthropic Claude' :
+                         'OpenAI GPT'} (BYOK)</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-zinc-400">Plan</dt>
+                    <dd className="text-white">7-day Free Trial</dd>
+                  </div>
+                </dl>
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 rounded-lg px-4 py-3 text-red-400">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep('plan')}
+                  className="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={deploy}
+                  disabled={isDeploying}
+                  className="flex-1 bg-orange-500 py-3 rounded-lg font-semibold text-white hover:bg-orange-400 transition-colors disabled:opacity-50"
+                >
+                  {isDeploying ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Deploying...
+                    </span>
+                  ) : (
+                    'Start Free Trial →'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Done */}
+        {step === 'done' && result && (
+          <div className="text-center">
+            <div className="text-6xl mb-6">🎉</div>
+            <h2 className="text-2xl font-bold mb-2 text-white">You&apos;re Live!</h2>
+            <p className="text-zinc-400 mb-8">Your AI assistant is ready to chat.</p>
+
+            <div className="bg-zinc-800 rounded-xl p-6 mb-8">
+              <p className="text-sm text-zinc-400 mb-2">Open Telegram and message:</p>
+              <p className="text-xl font-mono text-white">@{botInfo?.username}</p>
+            </div>
+
+            <div className="space-y-4">
+              <a
+                href={`https://t.me/${botInfo?.username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-blue-500 py-3 rounded-lg font-semibold text-white hover:bg-blue-400 transition-colors"
+              >
+                Open in Telegram →
+              </a>
+              <a
+                href={`/dashboard?id=${result.userId}`}
+                className="block w-full bg-zinc-800 py-3 rounded-lg font-semibold text-white hover:bg-zinc-700 transition-colors"
+              >
+                Go to Dashboard
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-// Step 4: Payment
-function PaymentStep({ plan, onComplete }: { plan: string; onComplete: () => void }) {
-  const planDetails: Record<string, { name: string; price: string }> = {
-    starter: { name: "Starter", price: "₹199" },
-    pro: { name: "Pro", price: "₹499" },
-    business: { name: "Business", price: "₹1,499" },
-  }
-
-  const selected = planDetails[plan] || planDetails.starter
-
+export default function Onboard() {
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">Complete your purchase</h1>
-        <p className="text-muted-foreground mt-2">You're almost there! Review and confirm your subscription.</p>
-      </div>
-
-      {/* Order Summary */}
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h3 className="font-semibold text-foreground">Order Summary</h3>
-        <div className="flex items-center justify-between py-3 border-b border-border">
-          <span className="text-muted-foreground">{selected.name} Plan (Monthly)</span>
-          <span className="font-medium text-foreground">{selected.price}</span>
+    <main className="min-h-screen py-12 px-6 bg-zinc-950">
+      <Suspense fallback={
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-zinc-400">Loading...</p>
         </div>
-        <div className="flex items-center justify-between pt-2">
-          <span className="font-semibold text-foreground">Total</span>
-          <span className="text-2xl font-bold text-foreground">{selected.price}<span className="text-sm text-muted-foreground">/month</span></span>
-        </div>
-      </div>
-
-      {/* Payment Button (Placeholder) */}
-      <div className="space-y-4">
-        <Button className="w-full h-12 text-base" onClick={onComplete}>
-          <CreditCard className="w-5 h-5 mr-2" />
-          Pay with Razorpay
-        </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          Secure payment powered by Razorpay. Cancel anytime.
-        </p>
-      </div>
-
-      {/* Trust badges */}
-      <div className="flex items-center justify-center gap-6 pt-4">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Check className="w-4 h-4 text-emerald-500" />
-          <span className="text-sm">7-day free trial</span>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Check className="w-4 h-4 text-emerald-500" />
-          <span className="text-sm">Cancel anytime</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Success Step
-function SuccessStep() {
-  return (
-    <div className="text-center space-y-6 py-12">
-      <div className="w-20 h-20 rounded-full bg-emerald-500 mx-auto flex items-center justify-center">
-        <Check className="w-10 h-10 text-white" />
-      </div>
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">You're all set!</h1>
-        <p className="text-muted-foreground mt-2">Your AI assistant is being deployed. This usually takes less than 60 seconds.</p>
-      </div>
-      <div className="rounded-xl border border-border bg-card p-6 text-left space-y-3">
-        <h3 className="font-semibold text-foreground">What happens next?</h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
-            <span>We're setting up your private server</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
-            <span>Your Telegram bot is being configured</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Check className="w-4 h-4 text-emerald-500 mt-0.5" />
-            <span>You'll receive a confirmation message on Telegram</span>
-          </li>
-        </ul>
-      </div>
-      <Button className="w-full" onClick={() => window.location.href = "/dashboard"}>
-        Go to Dashboard
-      </Button>
-    </div>
-  )
-}
-
-// Main Onboarding Component
-export default function OnboardPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState({
-    plan: "",
-    platform: "",
-    ai: "",
-    apiKey: "",
-  })
-
-  const steps = ["Plan", "Platform", "AI", "Payment"]
-
-  const handlePlanSelect = (plan: string) => {
-    setFormData({ ...formData, plan })
-    setCurrentStep(1)
-  }
-
-  const handlePlatformSelect = (platform: string) => {
-    setFormData({ ...formData, platform })
-    setCurrentStep(2)
-  }
-
-  const handleAISelect = (ai: string, apiKey?: string) => {
-    setFormData({ ...formData, ai, apiKey: apiKey || "" })
-    setCurrentStep(3)
-  }
-
-  const handlePaymentComplete = () => {
-    setCurrentStep(4)
-  }
-
-  return (
-    <div>
-      {currentStep < 4 && <StepIndicator steps={steps} currentStep={currentStep} />}
-
-      {currentStep === 0 && <SelectPlanStep onSelect={handlePlanSelect} />}
-      {currentStep === 1 && <ChoosePlatformStep onSelect={handlePlatformSelect} />}
-      {currentStep === 2 && <ChooseAIStep onSelect={handleAISelect} />}
-      {currentStep === 3 && <PaymentStep plan={formData.plan} onComplete={handlePaymentComplete} />}
-      {currentStep === 4 && <SuccessStep />}
-
-      {/* Back button */}
-      {currentStep > 0 && currentStep < 4 && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => setCurrentStep(currentStep - 1)}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← Back to previous step
-          </button>
-        </div>
-      )}
-    </div>
+      }>
+        <OnboardContent />
+      </Suspense>
+    </main>
   )
 }

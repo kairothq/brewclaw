@@ -3,15 +3,46 @@
 ## Current Position
 
 **Milestone:** v2.0 Unified Product
-**Phase:** 13 - Foundation Merge
-**Plan:** —
-**Status:** Not started
-**Last activity:** 2026-02-26 — Roadmap created for v2.0
+**Phase:** Pre-13 (Design-First UI Complete)
+**Plan:** Design Review → Foundation Merge
+**Status:** UI copied from 2openclaw, awaiting review
+**Last activity:** 2026-02-27 — Copied 2openclaw code, applied brewclaw styling
 
 **Progress:**
 ```
-[                    ] 0% (Phase 13/19)
+[====                ] 20% (Design UI done, Phase 13-19 pending)
 ```
+
+## What Just Happened (2026-02-27)
+
+**Design-First Approach:** Instead of GSD phases, user opted to:
+1. Copy working 2openclaw UI to brewclaw
+2. Apply brewclaw branding (zinc colors, orange accent)
+3. Review designs before backend integration
+
+**Files Created:**
+```
+app/(product)/
+├── onboard/page.tsx           # 8-step wizard (from 2openclaw)
+└── dashboard/
+    ├── layout.tsx             # Sidebar + TopBar
+    ├── page.tsx               # Main dashboard
+    ├── settings/page.tsx      # Profile & API keys
+    └── billing/page.tsx       # Subscription plans
+
+components/dashboard/
+├── Sidebar.tsx, TopBar.tsx, WelcomeSection.tsx
+├── MetricsGrid.tsx, ModelSelector.tsx, LiveActivity.tsx
+└── EmptyDashboard.tsx
+```
+
+**Two Onboarding Files Exist:**
+| Route | File | Auth Method |
+|-------|------|-------------|
+| `/onboarding` | `app/(auth)/onboarding/page.tsx` | NextAuth session |
+| `/onboard` | `app/(product)/onboard/page.tsx` | localStorage |
+
+**Next Step:** Merge these - wire the 2openclaw wizard to NextAuth
 
 ## Project Reference
 
@@ -98,16 +129,26 @@ See: .planning/PROJECT.md (updated 2026-02-26)
 ## Session Continuity
 
 **Next steps:**
-1. Run `/gsd:plan-phase 13` to break down Foundation Merge phase
-2. Address email provider decision (Resend vs Razorpay built-in)
-3. Inventory environment variables from both codebases
-4. Plan route group structure ((marketing)/, (product)/, (auth)/)
+1. **Review designs** at http://localhost:3000/onboard and /dashboard
+2. **Approve or request changes** to the UI
+3. **Proceed with Foundation Merge (Phase 13):**
+   - Wire 2openclaw wizard to NextAuth (replace localStorage)
+   - Set up route groups: (marketing), (product), (auth)
+   - Merge environment variables
+   - Update middleware for product routes
+
+**Test URLs:**
+- `/onboard` — Full 8-step wizard (UI only, API calls 404)
+- `/onboarding` — Auth-connected placeholder (redirects to /signin)
+- `/signin` — Auth page with Google OAuth + magic link
+- `/dashboard` — Dashboard with empty state
 
 **Handoff notes:**
+- Design-first approach bypassed GSD for UI work
+- 2openclaw code copied and rebranded (storage key: `brewclaw_instance`)
+- UI is functional but NOT wired to NextAuth or backend APIs
+- Phase 13 will merge auth: NextAuth session → wizard state
 - Research complete with HIGH confidence (7-phase structure validated)
-- All 36 v2.0 requirements mapped to phases (100% coverage)
-- Phase dependencies follow critical path: Auth → Payment → Onboarding → Dashboard
-- Plan-phase should flag Phase 17 (GCP Proxy) and Phase 19 (Data Migration) for validation during planning
 
 ## Blockers
 

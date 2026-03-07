@@ -17,29 +17,31 @@ interface StepTelegramProps {
  * StepTelegram Component
  *
  * Step 3 of onboarding: Telegram bot connection.
- * 60/40 split layout on desktop (video right, form left).
- * Stacks vertically on mobile with form first.
+ * Form on left, portrait video (9:16) centered on right.
+ * Stacks vertically on mobile with video first for visual guidance.
  */
 export function StepTelegram({ onContinue, onBack }: StepTelegramProps) {
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      {/* Main container: flex-col on mobile, flex-row on desktop */}
-      <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-        {/* Form section (left on desktop, top on mobile) */}
-        {/* Order 1 on mobile = appears first */}
-        <div className="w-full md:w-2/5 order-1">
-          <TelegramForm onContinue={onContinue} onBack={onBack} />
-        </div>
-
-        {/* Video section (right on desktop, bottom on mobile) */}
-        {/* Order 2 on mobile = appears second */}
-        <div className="w-full md:w-3/5 order-2">
-          <div className="aspect-video rounded-lg shadow-lg overflow-hidden">
+    <div className="w-full max-w-5xl mx-auto p-6">
+      {/* Main container: centered layout with form and portrait video */}
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
+        {/* Video section - portrait phone video */}
+        {/* On mobile: appears first (order-1) */}
+        {/* On desktop: appears on right side */}
+        <div className="w-full lg:w-auto order-1 lg:order-2 flex justify-center">
+          <div className="w-[280px] sm:w-[320px] aspect-[9/16] rounded-2xl shadow-2xl overflow-hidden border border-border/50">
             <VideoPlayer
               src="/videos/demo-telegram.mp4"
               className="w-full h-full"
             />
           </div>
+        </div>
+
+        {/* Form section */}
+        {/* On mobile: appears second (order-2) */}
+        {/* On desktop: appears on left side */}
+        <div className="w-full lg:flex-1 order-2 lg:order-1 max-w-md lg:max-w-none">
+          <TelegramForm onContinue={onContinue} onBack={onBack} />
         </div>
       </div>
     </div>
