@@ -2,10 +2,22 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import Resend from "next-auth/providers/resend"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
+
+// Only import prisma if DATABASE_URL is available
+// This prevents crashes during build and for unauthenticated routes
+const getAdapter = () => {
+  if (!process.env.DATABASE_URL) {
+    // Return undefined - NextAuth will work without an adapter
+    // but won't persist user data to database
+    return undefined
+  }
+  // Dynamic import to prevent loading prisma when not needed
+  const { prisma } = require("@/lib/prisma")
+  return PrismaAdapter(prisma)
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: getAdapter(),
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,

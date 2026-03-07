@@ -3,26 +3,48 @@ import { withAccelerate } from "@prisma/extension-accelerate"
 
 // Prisma 7 requires passing the connection URL to the client constructor
 // For Prisma Accelerate, use the DATABASE_URL which should point to Accelerate
+
+// Use 'any' type to avoid circular reference issues with extended client
+type ExtendedPrismaClient = any
+
 const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined
+  prisma: ExtendedPrismaClient | undefined
 }
 
-function createPrismaClient() {
+function createPrismaClient(): ExtendedPrismaClient {
   const databaseUrl = process.env.DATABASE_URL
 
-  // During build time, DATABASE_URL may not be set
-  // Use a dummy URL that will be replaced at runtime
-  // This prevents build failures while ensuring runtime works correctly
-  const url = databaseUrl || "prisma://placeholder.prisma-data.net"
+  if (!databaseUrl) {
+    throw new Error(
+      "DATABASE_URL environment variable is not set. " +
+      "Please configure it in your Vercel environment variables."
+    )
+  }
 
   // Prisma 7: Pass accelerateUrl for Prisma Accelerate
   return new PrismaClient({
-    accelerateUrl: url,
+    accelerateUrl: databaseUrl,
   }).$extends(withAccelerate())
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient()
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
+// Lazy initialization using a getter
+// This prevents the client from being created until it's actually used
+function getPrismaClient(): ExtendedPrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient()
+  }
+  return globalForPrisma.prisma
 }
+
+// Export a proxy that lazily initializes the client on first property access
+export const prisma = new Proxy({} as ExtendedPrismaClient, {
+  get(_target, prop: string | symbol) {
+    const client = getPrismaClient()
+    const value = client[prop]
+    // If it's a function, bind it to the client
+    if (typeof value === "function") {
+      return value.bind(client)
+    }
+    return value
+  },
+})
