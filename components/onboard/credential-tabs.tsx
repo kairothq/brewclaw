@@ -20,8 +20,7 @@ interface CredentialTabsProps {
  * CredentialTabs Component
  *
  * Tab switcher for Sign In (OAuth) vs API Key credential entry.
- * Used for provider configuration in the onboarding flow.
- * Implemented as custom tabs since shadcn/ui Tabs not installed.
+ * Uses BrewClaw design system - minimal with espresso accents.
  */
 export function CredentialTabs({
   provider,
@@ -35,10 +34,10 @@ export function CredentialTabs({
   ]
 
   return (
-    <div className="w-full mt-6">
-      {/* Tab list */}
+    <div className="w-full">
+      {/* Tab list - minimal pill style */}
       <div
-        className="flex border-b border-border"
+        className="inline-flex p-1 rounded-lg bg-[#0A0A0A] border border-[#222222]"
         role="tablist"
         aria-label="Credential type selection"
       >
@@ -52,13 +51,12 @@ export function CredentialTabs({
               aria-selected={isActive}
               aria-controls={`tabpanel-${tab.id}`}
               className={`
-                px-4 py-2.5 text-sm font-medium
-                transition-colors duration-200
-                border-b-2 -mb-px
-                focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                px-5 py-2 text-sm font-medium rounded-md
+                transition-all duration-200
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-[#78350F]/50
                 ${isActive
-                  ? "border-orange-500 text-orange-500"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                  ? "bg-white text-[#0A0A0A] shadow-sm"
+                  : "bg-transparent text-[#666666] hover:text-[#999999]"
                 }
               `}
               onClick={() => onTabChange(tab.id)}
@@ -74,7 +72,7 @@ export function CredentialTabs({
         id={`tabpanel-${activeTab}`}
         role="tabpanel"
         aria-labelledby={`tab-${activeTab}`}
-        className="pt-6"
+        className="mt-5"
       >
         {children}
       </div>

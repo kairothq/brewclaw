@@ -39,8 +39,8 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen flex">
-      {/* Rich left panel - hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-card via-background to-card relative overflow-hidden">
+      {/* Rich left panel - hidden on mobile, sticky to stay fixed while right side scrolls */}
+      <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen bg-gradient-to-br from-card via-background to-card relative overflow-hidden">
         {/* Animated gradient orbs */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 -left-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-gradient" />

@@ -9,13 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@paper-design/shaders": "^0.0.33",
     "@auth/prisma-adapter": "^2.11.1",
+    "@paper-design/shaders": "^0.0.33",
+    "@prisma/adapter-better-sqlite3": "^7.4.2",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "@remotion/cli": "^4.0.434",
     "@remotion/player": "^4.0.434",
+    "better-sqlite3": "^12.6.2",
     "dotenv": "^17.3.1",
+    "framer-motion": "^12.35.1",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",

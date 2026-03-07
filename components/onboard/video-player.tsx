@@ -12,6 +12,8 @@ interface VideoPlayerProps {
   className?: string
   /** Enable autoplay (default: true) */
   autoPlay?: boolean
+  /** Aspect ratio for the video container (e.g., "9/16" for portrait) */
+  aspectRatio?: string
 }
 
 /**
@@ -24,6 +26,7 @@ export function VideoPlayer({
   src,
   className = "",
   autoPlay = true,
+  aspectRatio,
 }: VideoPlayerProps) {
   // Component state
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -113,13 +116,15 @@ export function VideoPlayer({
 
   return (
     <div
-      className={`relative rounded-lg overflow-hidden border border-border bg-card ${className}`}
+      className={`relative overflow-hidden ${className}`}
+      style={aspectRatio ? { aspectRatio } : undefined}
     >
-      {/* Video element */}
+      {/* Video element - shows full video filling container */}
       <video
         ref={videoRef}
         src={src}
-        className="w-full h-full object-contain"
+        className="w-full h-full"
+        style={{ objectFit: "fill" }}
         muted
         playsInline
         onPlay={handlePlay}

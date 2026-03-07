@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { LiquidMetalButton } from "@/components/liquid-metal-button"
 
 /**
  * Props for the TelegramForm component
@@ -9,8 +10,16 @@ import { Button } from "@/components/ui/button"
 interface TelegramFormProps {
   /** Called when user continues with validated data */
   onContinue: (data: { botToken: string; userId: string }) => void
+  /** Called when user skips this step */
+  onSkip?: () => void
   /** Called when user navigates back */
   onBack: () => void
+  /** Called when bot token validation state changes */
+  onTokenValidatedChange?: (validated: boolean) => void
+  /** Initial bot token value (for restoring state on back navigation) */
+  initialToken?: string
+  /** Initial user ID value (for restoring state on back navigation) */
+  initialUserId?: string
 }
 
 /**
@@ -20,18 +29,30 @@ interface TelegramFormProps {
  * User ID field appears only after bot token is validated.
  * Both fields must be validated to proceed.
  */
-export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
-  // Bot token state
-  const [botToken, setBotToken] = useState("")
+export function TelegramForm({
+  onContinue,
+  onSkip,
+  onBack,
+  onTokenValidatedChange,
+  initialToken,
+  initialUserId,
+}: TelegramFormProps) {
+  // Bot token state - initialize from props if provided (for back navigation)
+  const [botToken, setBotToken] = useState(initialToken || "")
   const [tokenValidating, setTokenValidating] = useState(false)
-  const [tokenValidated, setTokenValidated] = useState(false)
+  const [tokenValidated, setTokenValidated] = useState(!!initialToken)
   const [tokenError, setTokenError] = useState<string | null>(null)
 
-  // User ID state
-  const [userId, setUserId] = useState("")
+  // User ID state - initialize from props if provided (for back navigation)
+  const [userId, setUserId] = useState(initialUserId || "")
   const [userIdValidating, setUserIdValidating] = useState(false)
-  const [userIdValidated, setUserIdValidated] = useState(false)
+  const [userIdValidated, setUserIdValidated] = useState(!!initialUserId)
   const [userIdError, setUserIdError] = useState<string | null>(null)
+
+  // Notify parent when token validation state changes
+  useEffect(() => {
+    onTokenValidatedChange?.(tokenValidated)
+  }, [tokenValidated, onTokenValidatedChange])
 
   /**
    * Validate bot token via API
@@ -173,20 +194,20 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
     <div className="w-full">
       {/* Header section */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-bold text-white">
           Connect your Telegram Bot
         </h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-zinc-400">
           We&apos;ll guide you through creating a bot with @BotFather
         </p>
       </div>
 
       {/* Bot Token section */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-foreground mb-2">
+        <label className="block text-base font-medium text-white mb-2">
           Bot Token
         </label>
-        <p className="text-sm text-muted-foreground mb-3">
+        <p className="text-sm text-zinc-400 mb-4">
           Create a bot with{" "}
           <a
             href="https://t.me/BotFather"
@@ -197,24 +218,28 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
             @BotFather
             <ExternalLinkIcon className="w-3 h-3" />
           </a>{" "}
-          and paste the token below
+          and paste the entire message below — we&apos;ll extract the token
         </p>
 
         {/* Token input with check button */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <input
             type="text"
             value={botToken}
             onChange={(e) => {
-              setBotToken(e.target.value)
+              const value = e.target.value
+              // Try to extract token from pasted BotFather message
+              const tokenMatch = value.match(/\d{8,}:[A-Za-z0-9_-]{30,}/)
+              const extractedToken = tokenMatch ? tokenMatch[0] : value
+              setBotToken(extractedToken)
               // Reset validation when token changes
               if (tokenValidated) {
                 setTokenValidated(false)
                 setTokenError(null)
               }
             }}
-            placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
-            className={`flex-1 h-10 px-3 rounded-md border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+            placeholder="Paste BotFather message or token here"
+            className={`flex-1 h-12 px-4 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-base ${
               tokenError
                 ? "border-red-500 focus:ring-red-500"
                 : tokenValidated
@@ -226,7 +251,7 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
             onClick={handleValidateToken}
             disabled={!botToken.trim() || tokenValidating}
             variant="outline"
-            className="px-4"
+            className="px-6 h-12"
           >
             {tokenValidating ? (
               <SpinnerIcon className="w-4 h-4 animate-spin" />
@@ -256,10 +281,10 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
             : "opacity-0 max-h-0"
         }`}
       >
-        <label className="block text-sm font-medium text-foreground mb-2">
+        <label className="block text-base font-medium text-white mb-2">
           Your Telegram User ID
         </label>
-        <p className="text-sm text-muted-foreground mb-3">
+        <p className="text-sm text-zinc-400 mb-4">
           Send /start to{" "}
           <a
             href="https://t.me/userinfobot"
@@ -270,25 +295,29 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
             @userinfobot
             <ExternalLinkIcon className="w-3 h-3" />
           </a>{" "}
-          to get your user ID
+          and paste the entire message — we&apos;ll extract your ID
         </p>
 
         {/* User ID input with check button */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <input
             type="text"
             inputMode="numeric"
             value={userId}
             onChange={(e) => {
-              setUserId(e.target.value)
+              const value = e.target.value
+              // Try to extract user ID from userinfobot message (looks for "Id: 123456789")
+              const idMatch = value.match(/Id:\s*(\d+)/)
+              const extractedId = idMatch ? idMatch[1] : value.replace(/\D/g, '')
+              setUserId(extractedId)
               // Reset validation when user ID changes
               if (userIdValidated) {
                 setUserIdValidated(false)
                 setUserIdError(null)
               }
             }}
-            placeholder="123456789"
-            className={`flex-1 h-10 px-3 rounded-md border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+            placeholder="Paste @userinfobot message or ID here"
+            className={`flex-1 h-12 px-4 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-base ${
               userIdError
                 ? "border-red-500 focus:ring-red-500"
                 : userIdValidated
@@ -300,7 +329,7 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
             onClick={handleValidateUserId}
             disabled={!userId.trim() || userIdValidating}
             variant="outline"
-            className="px-4"
+            className="px-6 h-12"
           >
             {userIdValidating ? (
               <SpinnerIcon className="w-4 h-4 animate-spin" />
@@ -322,32 +351,38 @@ export function TelegramForm({ onContinue, onBack }: TelegramFormProps) {
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="mt-8 space-y-4">
-        <Button
-          onClick={handleContinue}
-          size="lg"
-          className="w-full"
-          disabled={tokenValidating || userIdValidating}
-        >
-          {tokenValidating || userIdValidating ? (
-            <span className="flex items-center gap-2">
-              <SpinnerIcon className="w-4 h-4 animate-spin" />
-              Validating...
-            </span>
-          ) : (
-            "Continue"
-          )}
-        </Button>
+      {/* Action buttons - Skip and Continue side by side */}
+      <div className="mt-8 flex items-center gap-3">
+        {/* Skip Button - Ghost style */}
+        {onSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="flex-1 h-11 rounded-xl border border-[#333333] bg-transparent text-[#666666] text-[14px] font-medium transition-all duration-200 hover:border-[#444444] hover:text-[#999999] hover:bg-[#111111]"
+          >
+            Skip for now
+          </button>
+        )}
 
+        {/* Continue Button */}
         <button
           type="button"
-          onClick={onBack}
-          className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          onClick={handleContinue}
+          disabled={tokenValidating || userIdValidating}
+          className="flex-1 h-11 rounded-xl bg-white text-[#0A0A0A] text-[14px] font-medium transition-all duration-200 hover:bg-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Back
+          {tokenValidating || userIdValidating ? "Validating..." : "Continue"}
         </button>
       </div>
+
+      {/* Back Link */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-full mt-4 text-[13px] text-[#666666] hover:text-[#999999] transition-colors py-2"
+      >
+        Go back
+      </button>
     </div>
   )
 }

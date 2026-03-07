@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 
 // Step labels constant
 export const STEP_LABELS = {
-  1: 'Sign Up',
+  1: 'Sign In',
   2: 'AI Provider',
   3: 'Telegram'
 } as const

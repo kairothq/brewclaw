@@ -22,9 +22,9 @@ export function StepProgress({ currentStep: propStep, className = "" }: StepProg
               className={`
                 w-3 h-3 rounded-full transition-all duration-300
                 ${step < currentStep
-                  ? "bg-orange-500"
+                  ? "bg-white"
                   : step === currentStep
-                    ? "bg-orange-500 ring-2 ring-orange-500/50 animate-pulse"
+                    ? "bg-white ring-2 ring-white/50 animate-pulse"
                     : "border-2 border-zinc-600 bg-transparent"
                 }
               `}
@@ -36,7 +36,7 @@ export function StepProgress({ currentStep: propStep, className = "" }: StepProg
                 className={`
                   w-8 h-0.5 transition-all duration-300
                   ${step < currentStep
-                    ? "bg-orange-500"
+                    ? "bg-white"
                     : "bg-zinc-600"
                   }
                 `}
