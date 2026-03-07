@@ -1,0 +1,154 @@
+# Brewclaw Checkpoint - March 8, 2026
+
+## Session Summary
+Fixed Vercel deployment issues, standardized CTA links, set up staging environment.
+
+---
+
+## What Was Done
+
+### 1. Prisma 7 Compatibility (PR #2, #3 - Merged)
+- Removed deprecated `url` property from `prisma/schema.prisma`
+- Updated `prisma.config.ts` to use `DATABASE_URL` env var
+- Made Prisma client lazy-loading using Proxy pattern in `lib/prisma.ts`
+
+### 2. CTA Links Standardization (PR #5 - In staging)
+All CTAs now point to `/onboarding` instead of mixed `/signup` and `/onboard`:
+- `components/pricing-section.tsx` - `/onboarding` and `/onboarding?plan=pro`
+- `components/liquid-metal-button.tsx` - Default href changed to `/onboarding`
+- `components/hero-section.tsx` - Already had `/onboarding`
+- `components/final-cta.tsx` - Already had `/onboarding`
+- `components/navbar.tsx` - "Get Started" buttons link to `/onboarding`
+- `components/dashboard/TopBar.tsx` - Deploy button → `/onboarding`
+- `components/dashboard/EmptyDashboard.tsx` - CTA → `/onboarding`
+- `app/(product)/dashboard/layout.tsx` - Redirects → `/onboarding`
+
+### 3. Conditional Navbar (PR #5 - In staging)
+Created `components/conditional-navbar.tsx` that hides navbar on:
+- `/onboarding`
+- `/dashboard`
+- `/settings`
+- `/signin`
+- `/signup`
+
+Updated `app/layout.tsx` to use `ConditionalNavbar` instead of `Navbar`.
+
+### 4. NextAuth Fixes (In staging)
+File: `lib/auth.ts`
+- Added `trustHost: true` for Vercel preview deployments
+- Made providers conditional (only add if env vars exist)
+- **Resend (magic link) now requires both `AUTH_RESEND_KEY` AND `DATABASE_URL`**
+  - Magic link needs database adapter for verification tokens
+  - Without DATABASE_URL, only Google OAuth is available
+- Added env var validation logging
+
+### 5. Staging Environment Setup
+- Created `staging` branch
+- Configured Vercel domain: `staging.brewclaw.com` → staging branch
+- Added DNS CNAME record in GoDaddy: `staging` → `ba941fafe71b0179.vercel-dns-017.com`
+- Added `AUTH_URL=https://staging.brewclaw.com` env var for Preview environment
+
+---
+
+## Current State
+
+### Branches
+- `master` - Production (brewclaw.com) - Has older code without CTA fixes
+- `staging` - Staging (staging.brewclaw.com) - Has all fixes, ready for testing
+- `fix/cta-links-and-navbar` - PR #5, contains all CTA and auth fixes
+
+### Environment Variables in Vercel (All Environments)
+```
+AUTH_SECRET          ✅ Set
+GOOGLE_CLIENT_ID     ✅ Set
+GOOGLE_CLIENT_SECRET ✅ Set
+AUTH_RESEND_KEY      ✅ Set (but disabled without DATABASE_URL)
+AUTH_URL             ✅ Set for Preview (https://staging.brewclaw.com)
+DATABASE_URL         ❌ NOT SET - Magic link disabled until this is added
+```
+
+### Google OAuth Redirect URIs (in Google Cloud Console)
+```
+http://localhost:3000/api/auth/callback/google
+https://brewclaw.com/api/auth/callback/google
+https://staging.brewclaw.com/api/auth/callback/google
+https://brewclaw-pwz6e6hf7-divys-projects-a4af20de.vercel.app/api/auth/callback/google
+```
+
+---
+
+## What Works
+- ✅ Landing page at `/`
+- ✅ All CTAs redirect to `/onboarding`
+- ✅ Navbar hidden on onboarding/dashboard pages
+- ✅ Staging environment at `staging.brewclaw.com`
+- ✅ Google OAuth (should work after latest fix)
+
+## What Doesn't Work Yet
+- ❌ Magic link (email) sign-in - Needs `DATABASE_URL` configured
+- ⏳ Google OAuth - Just pushed fix, needs testing
+
+---
+
+## Workflow Going Forward
+
+### For Testing
+1. Push changes to `staging` branch
+2. Vercel auto-deploys to `staging.brewclaw.com`
+3. Test at staging URL
+
+### For Production
+1. Get user approval first
+2. Merge staging → master OR merge PR to master
+3. Vercel auto-deploys to `brewclaw.com`
+
+---
+
+## Next Steps
+
+1. **Test Google OAuth** at `staging.brewclaw.com/onboarding`
+2. **If working**, merge PR #5 to master for production
+3. **Set up database** (Prisma Accelerate) to enable magic link
+4. **Add `DATABASE_URL`** to Vercel env vars once database is ready
+
+---
+
+## Key Files Modified
+
+```
+lib/auth.ts                          - Auth configuration
+lib/prisma.ts                        - Lazy Prisma client
+components/conditional-navbar.tsx    - NEW - Hides navbar conditionally
+components/pricing-section.tsx       - CTA links
+components/liquid-metal-button.tsx   - Default href
+components/navbar.tsx                - Get Started links
+components/dashboard/TopBar.tsx      - Deploy button link
+components/dashboard/EmptyDashboard.tsx - CTA link
+app/(product)/dashboard/layout.tsx   - Redirect logic
+app/layout.tsx                       - Uses ConditionalNavbar
+middleware.ts                        - Removed /onboarding from protected routes
+.env.local.example                   - Updated with correct NextAuth v5 vars
+```
+
+---
+
+## Open PRs
+- **PR #5**: `fix/cta-links-and-navbar` - All CTA fixes and conditional navbar
+  - Status: Ready to merge to master after staging verification
+
+---
+
+## Commands Reference
+
+```bash
+# Work on staging
+cd /tmp/brewclaw-cta
+git checkout staging
+# make changes
+git add . && git commit -m "message" && git push
+
+# Merge to production (after approval)
+git checkout master
+git merge staging
+git push
+```
