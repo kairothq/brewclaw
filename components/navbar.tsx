@@ -128,8 +128,9 @@ export function Navbar() {
           <Button
             size="sm"
             className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-4"
+            asChild
           >
-            Get Started
+            <Link href="/onboarding">Get Started</Link>
           </Button>
         </div>
 
@@ -171,8 +172,8 @@ export function Navbar() {
                 </a>
               ))}
               <hr className="border-zinc-800 my-2" />
-              <Button className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full">
-                Get Started
+              <Button className="shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200 rounded-full" asChild>
+                <Link href="/onboarding">Get Started</Link>
               </Button>
             </div>
           </SheetContent>

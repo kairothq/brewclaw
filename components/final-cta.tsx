@@ -120,7 +120,7 @@ export function FinalCTA() {
 
         {/* CTA Button - Shader Liquid Metal */}
         <div className="cta-button mb-12 flex justify-center">
-          <LiquidMetalButton label="Start Free Today" href="/signup" />
+          <LiquidMetalButton label="Start Free Today" href="/onboarding" />
         </div>
 
         {/* Secondary CTA */}

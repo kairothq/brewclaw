@@ -60,7 +60,7 @@ export function HeroSection() {
       </p>
 
       {/* CTA Button - Shader */}
-      <LiquidMetalButton label="Start Free Today" href="/signup" />
+      <LiquidMetalButton label="Start Free Today" href="/onboarding" />
 
       {/* Trust Line */}
       <p className="mt-6 font-mono text-xs text-muted-foreground">
