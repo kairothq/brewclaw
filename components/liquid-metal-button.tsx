@@ -2,57 +2,51 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useMemo } from "react"
+import Link from "next/link"
 
 interface LiquidMetalButtonProps {
   label?: string
+  href?: string
   onClick?: () => void
-  disabled?: boolean
-  className?: string
-  fullWidth?: boolean
 }
 
-export function LiquidMetalButton({
-  label = "Continue",
-  onClick,
-  disabled = false,
-  className = "",
-  fullWidth = false,
-}: LiquidMetalButtonProps) {
+export function LiquidMetalButton({ label = "Get Started", href = "/signup", onClick }: LiquidMetalButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([])
   const shaderRef = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shaderMount = useRef<any>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLAnchorElement>(null)
   const rippleId = useRef(0)
 
   const dimensions = useMemo(() => {
     return {
-      width: fullWidth ? "100%" : 200,
-      height: 48,
-      innerWidth: fullWidth ? "calc(100% - 4px)" : 196,
-      innerHeight: 44,
-      shaderWidth: fullWidth ? "100%" : 200,
-      shaderHeight: 48,
+      width: 200,
+      height: 56,
+      innerWidth: 196,
+      innerHeight: 52,
+      shaderWidth: 200,
+      shaderHeight: 56,
     }
-  }, [fullWidth])
+  }, [])
 
   useEffect(() => {
-    const styleId = "shader-canvas-style-onboard"
+    const styleId = "shader-canvas-style"
     if (!document.getElementById(styleId)) {
       const style = document.createElement("style")
       style.id = styleId
       style.textContent = `
-        .shader-container-onboard canvas {
+        .shader-container canvas {
           width: 100% !important;
           height: 100% !important;
           display: block !important;
           position: absolute !important;
           top: 0 !important;
           left: 0 !important;
-          border-radius: 12px !important;
+          border-radius: 100px !important;
         }
-        @keyframes ripple-animation-onboard {
+        @keyframes ripple-animation {
           0% {
             transform: translate(-50%, -50%) scale(0);
             opacity: 0.6;
@@ -108,10 +102,9 @@ export function LiquidMetalButton({
         shaderMount.current = null
       }
     }
-  }, [])
+  }, [dimensions.width, dimensions.height])
 
   const handleMouseEnter = () => {
-    if (disabled) return
     setIsHovered(true)
     shaderMount.current?.setSpeed?.(1)
   }
@@ -122,9 +115,7 @@ export function LiquidMetalButton({
     shaderMount.current?.setSpeed?.(0.6)
   }
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (disabled) return
-
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (shaderMount.current?.setSpeed) {
       shaderMount.current.setSpeed(2.4)
       setTimeout(() => {
@@ -152,7 +143,7 @@ export function LiquidMetalButton({
   }
 
   return (
-    <div className={`relative ${fullWidth ? "w-full" : "inline-block"} ${className}`}>
+    <div className="relative inline-block">
       <div
         style={{
           perspective: "1000px",
@@ -162,21 +153,20 @@ export function LiquidMetalButton({
         <div
           style={{
             position: "relative",
-            width: typeof dimensions.width === "number" ? `${dimensions.width}px` : dimensions.width,
+            width: `${dimensions.width}px`,
             height: `${dimensions.height}px`,
             transformStyle: "preserve-3d",
             transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
             transform: "none",
-            opacity: disabled ? 0.5 : 1,
           }}
         >
-          {/* Label layer */}
+          {/* Text layer */}
           <div
             style={{
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100%",
+              width: `${dimensions.width}px`,
               height: `${dimensions.height}px`,
               display: "flex",
               alignItems: "center",
@@ -192,11 +182,10 @@ export function LiquidMetalButton({
             <span
               style={{
                 fontSize: "16px",
-                color: "#666666",
+                color: "#888888",
                 fontWeight: 500,
                 textShadow: "0px 1px 2px rgba(0, 0, 0, 0.5)",
-                transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                transform: "scale(1)",
+                transition: "all 0.3s ease",
                 whiteSpace: "nowrap",
               }}
             >
@@ -204,13 +193,13 @@ export function LiquidMetalButton({
             </span>
           </div>
 
-          {/* Inner background */}
+          {/* Inner dark layer */}
           <div
             style={{
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100%",
+              width: `${dimensions.width}px`,
               height: `${dimensions.height}px`,
               transformStyle: "preserve-3d",
               transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -220,26 +209,26 @@ export function LiquidMetalButton({
           >
             <div
               style={{
-                width: typeof dimensions.innerWidth === "number" ? `${dimensions.innerWidth}px` : dimensions.innerWidth,
+                width: `${dimensions.innerWidth}px`,
                 height: `${dimensions.innerHeight}px`,
                 margin: "2px",
-                borderRadius: "12px",
+                borderRadius: "100px",
                 background: "linear-gradient(180deg, #202020 0%, #000000 100%)",
                 boxShadow: isPressed
                   ? "inset 0px 2px 4px rgba(0, 0, 0, 0.4), inset 0px 1px 2px rgba(0, 0, 0, 0.3)"
                   : "none",
-                transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             />
           </div>
 
-          {/* Shader container */}
+          {/* Shader layer */}
           <div
             style={{
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100%",
+              width: `${dimensions.width}px`,
               height: `${dimensions.height}px`,
               transformStyle: "preserve-3d",
               transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -250,57 +239,58 @@ export function LiquidMetalButton({
             <div
               style={{
                 height: `${dimensions.height}px`,
-                width: "100%",
-                borderRadius: "12px",
+                width: `${dimensions.width}px`,
+                borderRadius: "100px",
                 boxShadow: isPressed
                   ? "0px 0px 0px 1px rgba(0, 0, 0, 0.5), 0px 1px 2px 0px rgba(0, 0, 0, 0.3)"
                   : isHovered
                     ? "0px 0px 0px 1px rgba(0, 0, 0, 0.4), 0px 12px 6px 0px rgba(0, 0, 0, 0.05), 0px 8px 5px 0px rgba(0, 0, 0, 0.1), 0px 4px 4px 0px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.2)"
                     : "0px 0px 0px 1px rgba(0, 0, 0, 0.3), 0px 36px 14px 0px rgba(0, 0, 0, 0.02), 0px 20px 12px 0px rgba(0, 0, 0, 0.08), 0px 9px 9px 0px rgba(0, 0, 0, 0.12), 0px 2px 5px 0px rgba(0, 0, 0, 0.15)",
-                transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                background: "rgb(0 0 0 / 0)",
+                transition: "box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                background: "transparent",
               }}
             >
               <div
                 ref={shaderRef}
-                className="shader-container-onboard"
+                className="shader-container"
                 style={{
-                  borderRadius: "12px",
+                  borderRadius: "100px",
                   overflow: "hidden",
                   position: "relative",
-                  width: "100%",
+                  width: `${dimensions.shaderWidth}px`,
+                  maxWidth: `${dimensions.shaderWidth}px`,
                   height: `${dimensions.shaderHeight}px`,
-                  transition: "width 0.4s ease, height 0.4s ease",
                 }}
               />
             </div>
           </div>
 
-          {/* Clickable button overlay */}
-          <button
+          {/* Clickable area */}
+          <Link
             ref={buttonRef}
+            href={href}
             onClick={handleClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            onMouseDown={() => !disabled && setIsPressed(true)}
+            onMouseDown={() => setIsPressed(true)}
             onMouseUp={() => setIsPressed(false)}
-            disabled={disabled}
             style={{
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100%",
+              width: `${dimensions.width}px`,
               height: `${dimensions.height}px`,
               background: "transparent",
               border: "none",
-              cursor: disabled ? "not-allowed" : "pointer",
+              cursor: "pointer",
               outline: "none",
               zIndex: 40,
               transformStyle: "preserve-3d",
               transform: "translateZ(25px)",
               transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
               overflow: "hidden",
-              borderRadius: "12px",
+              borderRadius: "100px",
+              display: "block",
             }}
             aria-label={label}
           >
@@ -316,11 +306,11 @@ export function LiquidMetalButton({
                   borderRadius: "50%",
                   background: "radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%)",
                   pointerEvents: "none",
-                  animation: "ripple-animation-onboard 0.6s ease-out",
+                  animation: "ripple-animation 0.6s ease-out",
                 }}
               />
             ))}
-          </button>
+          </Link>
         </div>
       </div>
     </div>
