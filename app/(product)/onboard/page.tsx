@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, Suspense, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, Suspense, useEffect, useRef } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useOnboardingStore } from '@/lib/onboarding-store'
 
 // Helper to set cookie fallback for Brave browser
 function setCookie(name: string, value: string, days: number = 30) {
@@ -26,9 +27,23 @@ declare global {
   }
 }
 
+// Map provider names from onboarding store to payment page format
+function mapProviderName(provider: string): string {
+  const mapping: Record<string, string> = {
+    'anthropic': 'anthropic',
+    'openai': 'openai',
+    'google': 'gemini',
+    'brewclaw': 'gemini' // fallback to gemini for brewclaw credits
+  }
+  return mapping[provider] || provider
+}
+
 function OnboardContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const onboardingStore = useOnboardingStore()
   const initialPlan = searchParams.get('plan') || 'free'
+  const hasHydrated = useRef(false)
 
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
@@ -44,6 +59,7 @@ function OnboardContent() {
   const [result, setResult] = useState<{ userId: string; subdomain: string; url: string } | null>(null)
   const [botInfo, setBotInfo] = useState<{ username: string } | null>(null)
   const [userId, setUserId] = useState('')
+  const [isCheckingStore, setIsCheckingStore] = useState(true)
 
   // Load Razorpay script
   useEffect(() => {
@@ -55,6 +71,45 @@ function OnboardContent() {
       document.body.removeChild(script)
     }
   }, [])
+
+  // Hydrate from onboarding store on mount
+  useEffect(() => {
+    if (hasHydrated.current) return
+    hasHydrated.current = true
+
+    // Check if user completed onboarding flow (has token + provider)
+    if (onboardingStore.botToken && onboardingStore.aiProvider) {
+      // User came from new onboarding flow - hydrate state
+      if (onboardingStore.aiProvider) {
+        setAiProvider(mapProviderName(onboardingStore.aiProvider))
+      }
+      if (onboardingStore.botToken) {
+        setTelegramToken(onboardingStore.botToken)
+      }
+      if (onboardingStore.telegramUserId) {
+        setTelegramUserId(onboardingStore.telegramUserId)
+      }
+      if (onboardingStore.botUsername) {
+        setBotInfo({ username: onboardingStore.botUsername })
+      }
+      if (onboardingStore.email) {
+        setEmail(onboardingStore.email)
+      }
+      // Skip to plan selection since onboarding is complete
+      setStep('plan')
+    }
+    setIsCheckingStore(false)
+  }, [onboardingStore.botToken, onboardingStore.aiProvider, onboardingStore.telegramUserId, onboardingStore.botUsername, onboardingStore.email])
+
+  // Redirect to onboarding if no store data and not on email step
+  // This handles users who land directly on /onboard without completing onboarding
+  useEffect(() => {
+    // Only check after initial hydration
+    if (isCheckingStore) return
+
+    // If step is beyond email but no store data, stay on email step (legacy flow)
+    // This allows the legacy flow to still work for users who didn't use new onboarding
+  }, [isCheckingStore, step])
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -174,6 +229,8 @@ function OnboardContent() {
             localStorage.setItem('brewclaw_instance', instanceData)
             // Set cookie fallback for Brave browser
             setCookie('brewclaw_instance', instanceData)
+            // Clear onboarding store after successful payment
+            onboardingStore.reset()
             setUserId(verifyData.userId)
             setResult({
               userId: verifyData.userId,
@@ -247,6 +304,8 @@ function OnboardContent() {
         localStorage.setItem('brewclaw_instance', instanceData)
         // Set cookie fallback for Brave browser
         setCookie('brewclaw_instance', instanceData)
+        // Clear onboarding store after successful deployment
+        onboardingStore.reset()
         setResult(data)
         setStep('done')
       } else {
@@ -263,11 +322,28 @@ function OnboardContent() {
   // All plans now go through payment (free trial uses deferred billing)
   const isPaidPlan = true
 
+  // Show loading while checking onboarding store
+  if (isCheckingStore) {
+    return (
+      <div className="mx-auto max-w-2xl text-center py-12">
+        <div className="flex items-center justify-center gap-2 text-zinc-400">
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-white">Deploy Your AI Assistant</h1>
+        <h1 className="text-3xl font-bold text-white">
+          {step === 'plan' || step === 'payment' ? 'Choose Your Plan' : 'Deploy Your AI Assistant'}
+        </h1>
         <p className="text-zinc-400 mt-2">
           {selectedPlan === 'free' ? '7-day free trial' : `${PLANS.find(p => p.id === selectedPlan)?.name} Plan`}
         </p>
