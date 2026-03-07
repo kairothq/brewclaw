@@ -87,11 +87,12 @@ Plans:
   3. Container provisioning triggered only after payment verification succeeds
   4. Razorpay webhooks update subscription status in database (active, past_due, cancelled)
   5. User subscription data persisted in Prisma linked to NextAuth user ID
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 15-01: TBD
-- [ ] 15-02: TBD
+- [ ] 15-01-PLAN.md — Razorpay service layer + Prisma schema extension
+- [ ] 15-02-PLAN.md — Subscription API routes (create + verify)
+- [ ] 15-03-PLAN.md — Webhook handler + middleware update
 
 ### Phase 16: Onboarding Integration
 **Goal**: Complete 6-step onboarding flow from plan selection through container provisioning
@@ -165,7 +166,7 @@ Phases execute in numeric order: 13 → 14 → 15 → 16 → 17 → 18 → 19
 | 12. Auth Foundation | v1.0 | 3/3 | Complete | 2026-02-26 |
 | 13. Foundation Merge | v2.0 | 0/2 | Not started | - |
 | 14. Database & Auth Bridge | v2.0 | 0/2 | Not started | - |
-| 15. Payment Integration | v2.0 | 0/2 | Not started | - |
+| 15. Payment Integration | v2.0 | 0/3 | Planned | - |
 | 16. Onboarding Integration | v2.0 | 0/2 | Not started | - |
 | 17. Dashboard & Container Management | v2.0 | 0/2 | Not started | - |
 | 18. Styling & Branding | v2.0 | 0/1 | Not started | - |
