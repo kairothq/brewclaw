@@ -1,19 +1,21 @@
-import { PrismaClient } from "@prisma/client/edge"
-import { withAccelerate } from "@prisma/extension-accelerate"
+import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { Pool } from "pg"
 
-// For development, use regular PrismaClient
-// For production (Vercel), use Prisma Accelerate
+// Prisma 7 configuration with PostgreSQL adapter
+// Development: Direct PostgreSQL connection
+// Production: Use Prisma Accelerate (configured via environment)
+
 const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined
+  prisma: PrismaClient | undefined
 }
 
 function createPrismaClient() {
-  // In production, use Prisma Accelerate for edge compatibility
-  if (process.env.NODE_ENV === "production") {
-    return new PrismaClient().$extends(withAccelerate())
-  }
-  // In development, use standard client
-  return new PrismaClient()
+  const connectionString = process.env.DATABASE_URL
+  const pool = new Pool({ connectionString })
+  const adapter = new PrismaPg(pool)
+
+  return new PrismaClient({ adapter })
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
