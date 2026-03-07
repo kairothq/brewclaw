@@ -215,46 +215,6 @@ function OnboardingContent() {
         return
       }
 
-      // Test mode bypass for staging (when RBI regulations block test cards)
-      if (process.env.NODE_ENV === 'development' || window.location.hostname.includes('staging')) {
-        console.log('[Test Mode] Bypassing payment, using test provisioning')
-        // Simulate successful payment response
-        const testResponse = {
-          razorpay_payment_id: `test_pay_${Date.now()}`,
-          razorpay_subscription_id: `test_sub_${Date.now()}`,
-          razorpay_signature: 'test_signature',
-        }
-
-        // Provision directly without payment
-        const verifyRes = await fetch('/api/subscriptions/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            razorpay_payment_id: testResponse.razorpay_payment_id,
-            razorpay_subscription_id: testResponse.razorpay_subscription_id,
-            razorpay_signature: testResponse.razorpay_signature,
-            testMode: true, // Flag for test mode
-            provisionData: {
-              telegramToken: store.botToken,
-              telegramUserId: store.telegramUserId,
-              aiProvider: store.aiProvider,
-              email: store.email || session?.user?.email,
-              plan: planId
-            }
-          })
-        })
-
-        const verifyData = await verifyRes.json()
-        if (verifyData.verified && verifyData.provisioned) {
-          setCurrentStep(5)
-          store.reset()
-        } else {
-          setPaymentError('Test provisioning failed')
-        }
-        setIsProcessingPayment(false)
-        return
-      }
-
       // Create subscription
       const tempUserId = crypto.randomUUID().replace(/-/g, '').substring(0, 16)
 
