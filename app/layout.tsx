@@ -6,7 +6,7 @@ import { Providers } from "@/components/providers"
 import { MotionProvider } from "@/components/providers/motion-provider"
 import { GSAPProvider } from "@/components/providers/gsap-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Navbar } from "@/components/navbar"
+import { ConditionalNavbar } from "@/components/conditional-navbar"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -35,7 +35,7 @@ export default function RootLayout({
           <MotionProvider>
             <GSAPProvider>
               <TooltipProvider>
-                <Navbar />
+                <ConditionalNavbar />
                 {children}
               </TooltipProvider>
             </GSAPProvider>

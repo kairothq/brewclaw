@@ -10,7 +10,7 @@ interface LiquidMetalButtonProps {
   onClick?: () => void
 }
 
-export function LiquidMetalButton({ label = "Get Started", href = "/signup", onClick }: LiquidMetalButtonProps) {
+export function LiquidMetalButton({ label = "Get Started", href = "/onboarding", onClick }: LiquidMetalButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([])

@@ -21,7 +21,7 @@ export function EmptyDashboard() {
 
       {/* CTA button */}
       <Link
-        href="/onboard"
+        href="/onboarding"
         className="inline-block bg-orange-500 hover:bg-orange-400 text-white rounded-lg px-6 py-3 mt-6 font-medium transition-all duration-200"
       >
         Deploy Your First Assistant

@@ -20,7 +20,7 @@ const plans = [
       "7-day conversation history",
     ],
     cta: "Get Started",
-    ctaLink: "/signup",
+    ctaLink: "/onboarding",
     highlighted: false,
   },
   {
@@ -37,7 +37,7 @@ const plans = [
       "API access",
     ],
     cta: "Start Free Trial",
-    ctaLink: "/signup?plan=pro",
+    ctaLink: "/onboarding?plan=pro",
     highlighted: true,
   },
   {

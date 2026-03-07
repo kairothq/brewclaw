@@ -82,7 +82,7 @@ export default function TopBar({ onMenuToggle, showMenuButton = false, sidebarCo
 
         {/* Deploy Button - full on sm+, icon only on mobile */}
         <Link
-          href="/onboard"
+          href="/onboarding"
           className="flex-shrink-0 flex items-center justify-center bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
         >
           <span>Deploy</span>
