@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Razorpay from 'razorpay'
 
 /**
  * POST /api/subscriptions/create
@@ -8,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * Request body:
  * - userId: string (temporary ID for notes)
  * - email: string
- * - planId: string ('starter' | 'pro' | 'team')
+ * - planId: string ('free' | 'starter' | 'pro' | 'business')
  * - name: string
  * - trial: boolean (if true, creates deferred billing subscription)
  *
@@ -17,6 +18,20 @@ import { NextRequest, NextResponse } from 'next/server'
  * - subscriptionId: string (Razorpay subscription ID)
  * - error?: string
  */
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+})
+
+// Map plan IDs to Razorpay plan IDs
+const RAZORPAY_PLANS: Record<string, string> = {
+  starter: process.env.RAZORPAY_PLAN_STARTER!,
+  pro: process.env.RAZORPAY_PLAN_PRO!,
+  business: process.env.RAZORPAY_PLAN_BUSINESS!,
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -29,20 +44,55 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Integrate with actual Razorpay API
-    // For now, return mock subscription ID for development
-    const mockSubscriptionId = `sub_mock_${Date.now()}`
+    // Get Razorpay plan ID
+    const razorpayPlanId = RAZORPAY_PLANS[planId]
+    if (!razorpayPlanId) {
+      return NextResponse.json(
+        { success: false, error: `Invalid plan ID: ${planId}` },
+        { status: 400 }
+      )
+    }
 
-    console.log('[Subscriptions] Create request:', { userId, email, planId, trial })
+    console.log('[Subscriptions] Creating subscription:', {
+      userId,
+      email,
+      planId,
+      razorpayPlanId,
+      trial,
+    })
+
+    // Create subscription on Razorpay
+    const subscription = await razorpay.subscriptions.create({
+      plan_id: razorpayPlanId,
+      customer_notify: 1,
+      total_count: 12, // 12 months
+      quantity: 1,
+      start_at: trial
+        ? Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // Start after 7 days for trial
+        : undefined,
+      notes: {
+        userId,
+        email,
+        name,
+        planId,
+        isTrial: trial ? 'true' : 'false',
+      },
+    })
+
+    console.log('[Subscriptions] Created:', subscription.id)
 
     return NextResponse.json({
       success: true,
-      subscriptionId: mockSubscriptionId,
+      subscriptionId: subscription.id,
     })
   } catch (error) {
     console.error('[Subscriptions] Create error:', error)
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Internal server error',
+      },
       { status: 500 }
     )
   }

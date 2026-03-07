@@ -31,6 +31,7 @@
     "next-auth": "^5.0.0-beta.30",
     "pg": "^8.20.0",
     "radix-ui": "^1.4.3",
+    "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "^4.0.434",

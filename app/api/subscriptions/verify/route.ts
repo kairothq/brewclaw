@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 
 /**
  * POST /api/subscriptions/verify
@@ -43,17 +44,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Verify Razorpay signature using crypto
-    // const expectedSignature = crypto
-    //   .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-    //   .update(`${razorpay_payment_id}|${razorpay_subscription_id}`)
-    //   .digest('hex')
-    // const isValid = expectedSignature === razorpay_signature
+    // Verify Razorpay signature
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .update(`${razorpay_payment_id}|${razorpay_subscription_id}`)
+      .digest('hex')
 
-    // Mock verification for development
-    const verified = true
+    const isValid = expectedSignature === razorpay_signature
 
-    if (!verified) {
+    if (!isValid) {
+      console.error('[Subscriptions] Invalid signature')
       return NextResponse.json({
         verified: false,
         provisioned: false,
@@ -61,29 +61,80 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // TODO: Provision container with provisionData
-    // For now, return mock provisioning success
-    const mockUserId = `usr_${Date.now()}`
-    const mockSubdomain = `bot-${mockUserId.slice(-6)}`
-    const mockUrl = `https://${mockSubdomain}.brewclaw.app`
-
-    console.log('[Subscriptions] Verify and provision:', {
+    console.log('[Subscriptions] Payment verified:', {
       razorpay_payment_id,
       razorpay_subscription_id,
-      provisionData,
     })
+
+    // Provision container via GCP API
+    if (!provisionData) {
+      return NextResponse.json({
+        verified: true,
+        provisioned: false,
+        error: 'Missing provision data',
+      })
+    }
+
+    const gcpApiUrl = process.env.GCP_API_URL
+    const gcpApiSecret = process.env.GCP_API_SECRET
+
+    if (!gcpApiUrl || !gcpApiSecret) {
+      console.error('[Subscriptions] GCP API not configured')
+      return NextResponse.json({
+        verified: true,
+        provisioned: false,
+        error: 'Container provisioning not configured',
+      })
+    }
+
+    // Call GCP API to provision container
+    const provisionResponse = await fetch(`${gcpApiUrl}/provision`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${gcpApiSecret}`,
+      },
+      body: JSON.stringify({
+        telegramToken: provisionData.telegramToken,
+        telegramUserId: provisionData.telegramUserId,
+        aiProvider: provisionData.aiProvider,
+        apiKey: provisionData.apiKey,
+        email: provisionData.email,
+        plan: provisionData.plan,
+        subscriptionId: razorpay_subscription_id,
+        paymentId: razorpay_payment_id,
+      }),
+    })
+
+    if (!provisionResponse.ok) {
+      const errorText = await provisionResponse.text()
+      console.error('[Subscriptions] GCP provision failed:', errorText)
+      return NextResponse.json({
+        verified: true,
+        provisioned: false,
+        error: 'Container provisioning failed',
+      })
+    }
+
+    const provisionResult = await provisionResponse.json()
+
+    console.log('[Subscriptions] Container provisioned:', provisionResult)
 
     return NextResponse.json({
       verified: true,
       provisioned: true,
-      userId: mockUserId,
-      subdomain: mockSubdomain,
-      url: mockUrl,
+      userId: provisionResult.userId || provisionResult.user_id,
+      subdomain: provisionResult.subdomain,
+      url: provisionResult.url,
     })
   } catch (error) {
     console.error('[Subscriptions] Verify error:', error)
     return NextResponse.json(
-      { verified: false, provisioned: false, error: 'Internal server error' },
+      {
+        verified: false,
+        provisioned: false,
+        error: error instanceof Error ? error.message : 'Internal server error',
+      },
       { status: 500 }
     )
   }
