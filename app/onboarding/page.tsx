@@ -201,6 +201,7 @@ function OnboardingContent() {
 
   // Step 4 completion handler - Payment
   const handlePlanSelected = async (planId: string, cycle: 'monthly' | 'yearly') => {
+    console.log('[Payment] Plan selected:', planId, cycle)
     setSelectedPlan(planId)
     setBillingCycle(cycle)
     setIsProcessingPayment(true)
@@ -218,6 +219,8 @@ function OnboardingContent() {
       // Create subscription
       const tempUserId = crypto.randomUUID().replace(/-/g, '').substring(0, 16)
 
+      console.log('[Payment] Creating subscription for:', { planId, email: store.email || session?.user?.email })
+
       const subRes = await fetch('/api/subscriptions/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -231,11 +234,16 @@ function OnboardingContent() {
       })
 
       const subData = await subRes.json()
+      console.log('[Payment] Subscription response:', subData)
+
       if (!subData.success) {
+        console.error('[Payment] Subscription creation failed:', subData.error)
         setPaymentError(subData.error || 'Failed to create subscription')
         setIsProcessingPayment(false)
         return
       }
+
+      console.log('[Payment] Opening Razorpay modal...')
 
       // Open Razorpay
       const options = {
@@ -295,7 +303,8 @@ function OnboardingContent() {
       const razorpay = new window.Razorpay(options)
       razorpay.open()
     } catch (e) {
-      setPaymentError('Failed to process payment')
+      console.error('[Payment] Error:', e)
+      setPaymentError(e instanceof Error ? e.message : 'Failed to process payment')
       setIsProcessingPayment(false)
     }
   }
