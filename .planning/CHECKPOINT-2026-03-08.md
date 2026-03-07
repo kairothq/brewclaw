@@ -1,7 +1,7 @@
 # Brewclaw Checkpoint - March 8, 2026
 
 ## Session Summary
-Fixed Vercel deployment issues, standardized CTA links, set up staging environment.
+Fixed Vercel deployment issues, standardized CTA links, set up staging environment, and integrated fancy pricing section into onboarding flow.
 
 ---
 
@@ -48,6 +48,29 @@ File: `lib/auth.ts`
 - Added DNS CNAME record in GoDaddy: `staging` → `ba941fafe71b0179.vercel-dns-017.com`
 - Added `AUTH_URL=https://staging.brewclaw.com` env var for Preview environment
 
+### 6. Fancy Pricing Integration (Phase 15-04 - In staging)
+Integrated landing page pricing design directly into onboarding flow:
+- **Step 4: Choose Plan** - Fancy pricing cards with border beam animation
+  - Monthly/Yearly toggle with -20% discount badge
+  - 3 tiers: Free, Pro, Team
+  - "Most Popular" badge on Pro card
+  - Hover animations (scale + lift)
+  - Mobile responsive (stacks vertically)
+- **Razorpay Integration**
+  - Direct checkout modal in onboarding (no redirect to /onboard)
+  - Free plan: Skips payment, goes to success screen
+  - Paid plans: Razorpay modal → payment → container provisioning
+  - Payment cancellation handled gracefully
+- **New Components**
+  - `components/onboard/step-pricing.tsx` - Pricing step component
+  - `app/api/subscriptions/create/route.ts` - Subscription creation API
+  - `app/api/subscriptions/verify/route.ts` - Payment verification API
+- **Updated Flow**
+  - Progress indicator now shows 4 steps (was 3)
+  - Removed StepSuccessTransition → /onboard redirect
+  - Added inline success screen (Step 5)
+  - Steps: Sign In → AI Provider → Telegram → **Pricing** → Success
+
 ---
 
 ## Current State
@@ -83,6 +106,8 @@ https://brewclaw-pwz6e6hf7-divys-projects-a4af20de.vercel.app/api/auth/callback/
 - ✅ Navbar hidden on onboarding/dashboard pages
 - ✅ Staging environment at `staging.brewclaw.com`
 - ✅ Google OAuth (should work after latest fix)
+- ✅ 4-step onboarding flow with fancy pricing (Steps 1-5)
+- ✅ Razorpay integration in onboarding flow
 
 ## What Doesn't Work Yet
 - ❌ Magic link (email) sign-in - Needs `DATABASE_URL` configured
@@ -106,10 +131,18 @@ https://brewclaw-pwz6e6hf7-divys-projects-a4af20de.vercel.app/api/auth/callback/
 
 ## Next Steps
 
-1. **Test Google OAuth** at `staging.brewclaw.com/onboarding`
-2. **If working**, merge PR #5 to master for production
-3. **Set up database** (Prisma Accelerate) to enable magic link
-4. **Add `DATABASE_URL`** to Vercel env vars once database is ready
+1. **Test full onboarding flow** at `staging.brewclaw.com/onboarding`:
+   - Google OAuth sign-in
+   - AI provider selection
+   - Telegram bot connection
+   - **NEW: Pricing selection with Razorpay checkout**
+2. **Configure Razorpay** environment variables:
+   - `NEXT_PUBLIC_RAZORPAY_KEY_ID` - Razorpay public key
+   - `RAZORPAY_KEY_SECRET` - Razorpay secret key
+3. **Connect backend** - Update subscription APIs to call GCP container provisioning
+4. **If all working**, merge staging → master for production
+5. **Set up database** (Prisma Accelerate) to enable magic link
+6. **Add `DATABASE_URL`** to Vercel env vars once database is ready
 
 ---
 
@@ -128,6 +161,14 @@ app/(product)/dashboard/layout.tsx   - Redirect logic
 app/layout.tsx                       - Uses ConditionalNavbar
 middleware.ts                        - Removed /onboarding from protected routes
 .env.local.example                   - Updated with correct NextAuth v5 vars
+
+# Phase 15-04 (Pricing Integration)
+app/onboarding/page.tsx              - Added Steps 4-5, Razorpay integration
+components/onboard/step-pricing.tsx  - NEW - Fancy pricing component
+components/onboard/step-progress.tsx - Updated to 4 steps
+lib/onboarding-store.ts              - Updated step labels
+app/api/subscriptions/create/route.ts - NEW - Subscription creation
+app/api/subscriptions/verify/route.ts - NEW - Payment verification
 ```
 
 ---
