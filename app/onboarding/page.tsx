@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
@@ -90,12 +90,22 @@ function LeftPanel() {
   )
 }
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session, status } = useSession()
   const store = useOnboardingStore()
   const [direction, setDirection] = useState<"forward" | "back">("forward")
   const [showSuccess, setShowSuccess] = useState(false)
+
+  // Track entry point from pricing section
+  useEffect(() => {
+    const plan = searchParams.get("plan")
+    const fromPricing = searchParams.get("from") === "pricing" || !!plan
+    if (fromPricing) {
+      store.setFromPricing(true, plan || undefined)
+    }
+  }, [searchParams, store])
 
   // Auto-advance to step 2 if authenticated and on step 1
   useEffect(() => {
@@ -158,9 +168,15 @@ export default function OnboardingPage() {
     setShowSuccess(true)
   }
 
-  // Success transition complete handler
+  // Success transition complete handler - redirect to pricing for plan selection/payment
   const handleSuccessComplete = () => {
-    router.push("/dashboard")
+    // Build redirect URL with plan if selected from pricing
+    const params = new URLSearchParams()
+    if (store.selectedPlan) {
+      params.set("plan", store.selectedPlan)
+    }
+    const query = params.toString()
+    router.push(`/pricing${query ? `?${query}` : ""}`)
   }
 
   // Handle logout
@@ -318,5 +334,19 @@ export default function OnboardingPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <OnboardingContent />
+    </Suspense>
   )
 }

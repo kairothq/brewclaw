@@ -42,7 +42,8 @@ function OnboardContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const onboardingStore = useOnboardingStore()
-  const initialPlan = searchParams.get('plan') || 'free'
+  const initialPlan = searchParams.get('plan') || onboardingStore.selectedPlan || 'free'
+  const fromPricing = searchParams.get('from') === 'pricing' || onboardingStore.fromPricing
   const hasHydrated = useRef(false)
 
   const [step, setStep] = useState<Step>('email')
@@ -95,11 +96,18 @@ function OnboardContent() {
       if (onboardingStore.email) {
         setEmail(onboardingStore.email)
       }
-      // Skip to plan selection since onboarding is complete
-      setStep('plan')
+
+      // If user came from pricing section with a plan, skip directly to payment
+      if (fromPricing && initialPlan !== 'free') {
+        setSelectedPlan(initialPlan)
+        setStep('payment')
+      } else {
+        // Otherwise show plan selection
+        setStep('plan')
+      }
     }
     setIsCheckingStore(false)
-  }, [onboardingStore.botToken, onboardingStore.aiProvider, onboardingStore.telegramUserId, onboardingStore.botUsername, onboardingStore.email])
+  }, [onboardingStore.botToken, onboardingStore.aiProvider, onboardingStore.telegramUserId, onboardingStore.botUsername, onboardingStore.email, fromPricing, initialPlan])
 
   // Redirect to onboarding if no store data and not on email step
   // This handles users who land directly on /onboard without completing onboarding

@@ -78,7 +78,7 @@ export function StepTelegram({ onContinue, onSkip, onBack }: StepTelegramProps) 
       {/* Form section - matches video height */}
       <div className="order-2 lg:order-1 w-full lg:w-auto">
         <div
-          className="rounded-2xl lg:rounded-r-none border border-zinc-800/60 bg-zinc-900/80 backdrop-blur-sm shadow-2xl flex flex-col justify-center p-8 lg:p-10"
+          className="rounded-3xl lg:rounded-r-none border border-zinc-800/60 bg-zinc-900/80 backdrop-blur-sm shadow-2xl flex flex-col justify-center p-8 lg:p-10"
           style={{ minHeight: "500px" }}
         >
           <div className="w-full max-w-sm">
@@ -103,7 +103,7 @@ export function StepTelegram({ onContinue, onSkip, onBack }: StepTelegramProps) 
       {/* Video section - portrait phone mockup (9:16 aspect ratio) */}
       <div className="order-1 lg:order-2 flex-shrink-0 mb-6 lg:mb-0">
         <div
-          className="rounded-2xl lg:rounded-l-none shadow-2xl border border-zinc-800/60 overflow-hidden relative group"
+          className="rounded-3xl lg:rounded-l-none shadow-2xl border border-zinc-800/60 overflow-hidden relative group bg-zinc-900"
           style={{
             width: "280px",
             height: "500px",
@@ -113,7 +113,7 @@ export function StepTelegram({ onContinue, onSkip, onBack }: StepTelegramProps) 
           <video
             ref={videoRef}
             src="/videos/demo-telegram.mp4"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+            className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${
               tokenValidated ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
             autoPlay
@@ -129,7 +129,7 @@ export function StepTelegram({ onContinue, onSkip, onBack }: StepTelegramProps) 
           <video
             ref={userIdVideoRef}
             src="/videos/demo-userid.mp4"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+            className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${
               tokenValidated ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             muted

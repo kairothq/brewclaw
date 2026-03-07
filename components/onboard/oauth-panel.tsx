@@ -183,13 +183,13 @@ export function OAuthPanel({ provider, onValidated }: OAuthPanelProps) {
       // For Anthropic: Accept the code directly (token exchange is blocked by Cloudflare)
       // The code format validation is sufficient for MVP
       if (provider.id === "anthropic") {
-        // Validate code format - should be alphanumeric, at least 20 chars
-        if (code.length >= 20 && /^[a-zA-Z0-9_-]+$/.test(code)) {
+        // Validate code format - should be at least 10 chars (codes vary in format)
+        if (code.length >= 10) {
           setValidationResult("success")
           onValidated({ type: "oauth", value: code })
         } else {
           setValidationResult("error")
-          setErrorMessage("Invalid authorization code format. Please copy the full code from Claude.")
+          setErrorMessage("Authorization code too short. Please copy the full code from Claude.")
         }
         setValidating(false)
         return

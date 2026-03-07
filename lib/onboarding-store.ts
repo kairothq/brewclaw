@@ -28,9 +28,14 @@ export interface OnboardingState {
   botUsername: string | null
   telegramUserId: string | null
 
+  // Entry tracking - if user came from pricing section
+  fromPricing: boolean
+  selectedPlan: string | null  // Plan selected from landing page pricing
+
   // Actions
   setStep: (step: 1 | 2 | 3) => void
   setStepData: (step: number, data: Partial<OnboardingState>) => void
+  setFromPricing: (fromPricing: boolean, plan?: string) => void
   goBack: () => void
   reset: () => void
 }
@@ -46,15 +51,22 @@ export const useOnboardingStore = create<OnboardingState>()(
       botToken: null,
       botUsername: null,
       telegramUserId: null,
+      fromPricing: false,
+      selectedPlan: null,
 
       // Actions
       setStep: (step) => set({ currentStep: step }),
 
       setStepData: (step, data) => {
         // Filter out action functions from data
-        const { setStep, setStepData, goBack, reset, ...stateData } = data as OnboardingState
+        const { setStep, setStepData, setFromPricing, goBack, reset, ...stateData } = data as OnboardingState
         set(stateData)
       },
+
+      setFromPricing: (fromPricing, plan) => set({
+        fromPricing,
+        selectedPlan: plan || null
+      }),
 
       goBack: () => {
         const { currentStep } = get()
@@ -71,6 +83,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         botToken: null,
         botUsername: null,
         telegramUserId: null,
+        fromPricing: false,
+        selectedPlan: null,
       }),
     }),
     {
