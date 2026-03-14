@@ -123,13 +123,14 @@ function OnboardingContent() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
 
-  // Track entry point from pricing section on landing page
+  // Track entry point from pricing section on landing page (run once on mount)
   useEffect(() => {
     const plan = searchParams.get("plan")
     if (plan) {
       store.setFromPricing(true, plan)
     }
-  }, [searchParams, store])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // Auto-advance past Sign In (step 2) if already authenticated
   useEffect(() => {
