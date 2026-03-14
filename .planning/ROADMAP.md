@@ -156,10 +156,28 @@ Plans:
 Plans:
 - [ ] 19-01: TBD
 
+### Phase 20: Dashboard Redesign
+**Goal**: Chat-first dashboard with real-time credits, provider management, conversation threads, and usage tracking
+**Depends on**: Phase 17
+**Requirements**: DASH-07, DASH-08, DASH-09, DASH-10, DASH-11, DASH-12
+**Success Criteria** (what must be TRUE):
+  1. User sees a chat interface as the primary dashboard view with conversation threads
+  2. User can view remaining credits balance with daily/monthly spend breakdown
+  3. User can top up credits via Razorpay from within the dashboard
+  4. User can manage AI providers (connect/disconnect API keys) from settings modal
+  5. User can see conversation history with pinned threads and search
+  6. Sidebar shows credits balance with low-balance warning, settings access, and restart/restore controls
+**Plans**: 3 plans
+
+Plans:
+- [ ] 20-01-PLAN.md — Zustand dashboard store + ChatSidebar + layout rewire
+- [ ] 20-02-PLAN.md — Chat interface (ChatArea, ChatInput, MessageBubble)
+- [ ] 20-03-PLAN.md — Credits slide-out panel + Settings modal with provider management
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 13 → 14 → 15 → 16 → 17 → 18 → 19
+Phases execute in numeric order: 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -171,3 +189,4 @@ Phases execute in numeric order: 13 → 14 → 15 → 16 → 17 → 18 → 19
 | 17. Dashboard & Container Management | v2.0 | 0/2 | Not started | - |
 | 18. Styling & Branding | v2.0 | 0/1 | Not started | - |
 | 19. Production Cutover | v2.0 | 0/1 | Not started | - |
+| 20. Dashboard Redesign | v2.0 | 0/3 | Planned | - |
