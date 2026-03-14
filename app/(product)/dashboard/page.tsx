@@ -6,20 +6,20 @@ import MetricsGrid from '@/components/dashboard/MetricsGrid'
 import { ModelSelector } from '@/components/dashboard/ModelSelector'
 import { LiveActivity } from '@/components/dashboard/LiveActivity'
 import { EmptyDashboard } from '@/components/dashboard/EmptyDashboard'
+import { InstanceControls } from '@/components/dashboard/InstanceControls'
+import { ContainerLogs } from '@/components/dashboard/ContainerLogs'
 
 export default function DashboardPage() {
-  const [hasInstances, setHasInstances] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check localStorage for instance data
     const instanceData = localStorage.getItem('brewclaw_instance')
     if (instanceData) {
       try {
         const parsed = JSON.parse(instanceData)
-        // User has instance data if userId exists
         if (parsed.userId) {
-          setHasInstances(true)
+          setUserId(parsed.userId)
         }
       } catch (e) {
         console.error('Failed to parse instance data:', e)
@@ -44,19 +44,26 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <WelcomeSection />
 
-      {hasInstances ? (
+      {userId ? (
         <>
-          {/* Metrics Grid */}
-          <MetricsGrid />
+          {/* Instance Controls + Metrics */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <InstanceControls userId={userId} />
+            <div className="lg:col-span-2">
+              <MetricsGrid />
+            </div>
+          </div>
 
-          {/* Two-column grid: Model Selector + Live Activity */}
+          {/* Model Selector + Live Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ModelSelector />
             <LiveActivity />
           </div>
+
+          {/* Container Logs */}
+          <ContainerLogs userId={userId} />
         </>
       ) : (
-        /* Empty Dashboard State */
         <EmptyDashboard />
       )}
     </div>
