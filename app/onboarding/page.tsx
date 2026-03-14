@@ -201,7 +201,12 @@ function OnboardingContent() {
 
   // Step 4 completion handler - Payment
   const handlePlanSelected = async (planId: string, cycle: 'monthly' | 'yearly') => {
-    console.log('[Payment] Plan selected:', planId, cycle)
+    console.log('[Payment] ==================== PLAN SELECTED ====================')
+    console.log('[Payment] Plan ID:', planId)
+    console.log('[Payment] Billing Cycle:', cycle)
+    console.log('[Payment] Current step:', currentStep)
+    console.log('[Payment] Session:', session)
+    console.log('[Payment] =======================================================')
     setSelectedPlan(planId)
     setBillingCycle(cycle)
     setIsProcessingPayment(true)
@@ -210,6 +215,16 @@ function OnboardingContent() {
     try {
       // Free plan goes directly to success (no payment needed)
       if (planId === 'free') {
+        setCurrentStep(5)
+        setIsProcessingPayment(false)
+        store.reset()
+        return
+      }
+
+      // TEST MODE: Bypass payment for testing (remove this in production!)
+      const isTestMode = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.includes('test')
+      if (isTestMode && confirm('⚠️ TEST MODE: Skip payment and go directly to success?\n\nThis should be removed in production.')) {
+        console.log('[Payment] TEST MODE: Skipping payment flow')
         setCurrentStep(5)
         setIsProcessingPayment(false)
         store.reset()

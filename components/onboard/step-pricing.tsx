@@ -64,6 +64,14 @@ interface StepPricingProps {
 export function StepPricing({ onContinue, onBack }: StepPricingProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
+  console.log('[StepPricing] Component rendered, onContinue:', typeof onContinue)
+
+  const handlePlanClick = (planId: string) => {
+    console.log('[StepPricing] Button clicked:', planId, billingCycle)
+    console.log('[StepPricing] Calling onContinue...')
+    onContinue(planId, billingCycle)
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -171,7 +179,7 @@ export function StepPricing({ onContinue, onBack }: StepPricingProps) {
             </ul>
 
             <Button
-              onClick={() => onContinue(plan.id, billingCycle)}
+              onClick={() => handlePlanClick(plan.id)}
               className={`w-full rounded-full ${
                 plan.highlighted
                   ? 'bg-white text-zinc-950 hover:bg-zinc-200'

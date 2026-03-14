@@ -77,22 +77,36 @@ export async function POST(req: NextRequest) {
     })
 
     // Create subscription on Razorpay
-    const subscription = await razorpay.subscriptions.create({
-      plan_id: razorpayPlanId,
-      customer_notify: 1,
-      total_count: 12, // 12 months
-      quantity: 1,
-      start_at: trial
-        ? Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // Start after 7 days for trial
-        : undefined,
-      notes: {
-        userId,
-        email,
-        name,
-        planId,
-        isTrial: trial ? 'true' : 'false',
-      },
-    })
+    let subscription
+    try {
+      subscription = await razorpay.subscriptions.create({
+        plan_id: razorpayPlanId,
+        customer_notify: 1,
+        total_count: 12, // 12 months
+        quantity: 1,
+        start_at: trial
+          ? Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // Start after 7 days for trial
+          : undefined,
+        notes: {
+          userId,
+          email,
+          name,
+          planId,
+          isTrial: trial ? 'true' : 'false',
+        },
+      })
+    } catch (rzpError: any) {
+      console.error('[Subscriptions] Razorpay API error:', rzpError)
+      console.error('[Subscriptions] Error details:', JSON.stringify(rzpError, null, 2))
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Razorpay error: ${rzpError.error?.description || rzpError.message || 'Unknown error'}`,
+          details: rzpError.error || rzpError,
+        },
+        { status: 500 }
+      )
+    }
 
     console.log('[Subscriptions] Created:', subscription.id)
 
