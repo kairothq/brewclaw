@@ -1,32 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { verifyPaymentSignature } from '@/lib/razorpay'
+import { prisma } from '@/lib/prisma'
 
-/**
- * POST /api/subscriptions/verify
- *
- * Verifies Razorpay payment signature and provisions container.
- *
- * Request body:
- * - razorpay_payment_id: string
- * - razorpay_subscription_id: string
- * - razorpay_signature: string
- * - provisionData: {
- *     telegramToken: string
- *     telegramUserId: string
- *     aiProvider: string
- *     apiKey: string
- *     email: string
- *     plan: string
- *   }
- *
- * Returns:
- * - verified: boolean
- * - provisioned: boolean
- * - userId?: string (actual user ID after provisioning)
- * - subdomain?: string
- * - url?: string
- * - error?: string
- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -44,16 +19,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify Razorpay signature
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-      .update(`${razorpay_payment_id}|${razorpay_subscription_id}`)
-      .digest('hex')
-
-    const isValid = expectedSignature === razorpay_signature
+    // Timing-safe signature verification
+    const isValid = verifyPaymentSignature({
+      razorpay_payment_id,
+      razorpay_subscription_id,
+      razorpay_signature,
+    })
 
     if (!isValid) {
-      console.error('[Subscriptions] Invalid signature')
+      console.error('[Verify] Invalid signature')
       return NextResponse.json({
         verified: false,
         provisioned: false,
@@ -61,10 +35,21 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    console.log('[Subscriptions] Payment verified:', {
-      razorpay_payment_id,
-      razorpay_subscription_id,
-    })
+    console.log('[Verify] Payment verified:', { razorpay_payment_id, razorpay_subscription_id })
+
+    // Update subscription in database
+    try {
+      await prisma.subscription.update({
+        where: { razorpaySubscriptionId: razorpay_subscription_id },
+        data: {
+          razorpayPaymentId: razorpay_payment_id,
+          status: 'active',
+          currentPeriodStart: new Date(),
+        },
+      })
+    } catch (dbError) {
+      console.error('[Verify] DB update failed (non-fatal):', dbError)
+    }
 
     // Provision container via GCP API
     if (!provisionData) {
@@ -79,7 +64,7 @@ export async function POST(req: NextRequest) {
     const gcpApiSecret = process.env.GCP_API_SECRET
 
     if (!gcpApiUrl || !gcpApiSecret) {
-      console.error('[Subscriptions] GCP API not configured')
+      console.error('[Verify] GCP API not configured')
       return NextResponse.json({
         verified: true,
         provisioned: false,
@@ -87,7 +72,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Call GCP API to provision container
     const provisionResponse = await fetch(`${gcpApiUrl}/provision`, {
       method: 'POST',
       headers: {
@@ -108,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     if (!provisionResponse.ok) {
       const errorText = await provisionResponse.text()
-      console.error('[Subscriptions] GCP provision failed:', errorText)
+      console.error('[Verify] GCP provision failed:', errorText)
       return NextResponse.json({
         verified: true,
         provisioned: false,
@@ -117,8 +101,7 @@ export async function POST(req: NextRequest) {
     }
 
     const provisionResult = await provisionResponse.json()
-
-    console.log('[Subscriptions] Container provisioned:', provisionResult)
+    console.log('[Verify] Container provisioned:', provisionResult)
 
     return NextResponse.json({
       verified: true,
@@ -128,7 +111,7 @@ export async function POST(req: NextRequest) {
       url: provisionResult.url,
     })
   } catch (error) {
-    console.error('[Subscriptions] Verify error:', error)
+    console.error('[Verify] Error:', error)
     return NextResponse.json(
       {
         verified: false,

@@ -10,15 +10,47 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String    @unique
+  email         String        @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  subscription  Subscription?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Subscription {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  razorpaySubscriptionId String  @unique
+  razorpayCustomerId    String?
+  razorpayPaymentId     String?
+  planId                String
+  status                String   @default("pending") // pending, active, halted, cancelled, completed, expired, paused
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  trialEnd              DateTime?
+  cancelledAt           DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([razorpaySubscriptionId])
+  @@index([status])
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique // Razorpay event ID for idempotency
+  eventType String
+  payload   String   // JSON stringified payload
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
 }
 
 model Account {

@@ -1,54 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Razorpay from 'razorpay'
-
-/**
- * POST /api/subscriptions/create
- *
- * Creates a Razorpay subscription for the user.
- *
- * Request body:
- * - userId: string (temporary ID for notes)
- * - email: string
- * - planId: string ('free' | 'starter' | 'pro' | 'business')
- * - name: string
- * - trial: boolean (if true, creates deferred billing subscription)
- *
- * Returns:
- * - success: boolean
- * - subscriptionId: string (Razorpay subscription ID)
- * - error?: string
- */
-
-// Validate environment variables
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  console.error('[Subscriptions] Missing Razorpay credentials')
-}
-
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-})
-
-// Map plan IDs to Razorpay plan IDs
-const RAZORPAY_PLANS: Record<string, string> = {
-  pro: process.env.RAZORPAY_PLAN_PRO || '',
-  team: process.env.RAZORPAY_PLAN_BUSINESS || '',
-  // Fallback for any 'starter' references
-  starter: process.env.RAZORPAY_PLAN_STARTER || '',
-}
+import { createSubscription, getRazorpayPlanId } from '@/lib/razorpay'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
   try {
-    // Validate Razorpay configuration
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('[Subscriptions] Razorpay not configured')
-      return NextResponse.json(
-        { success: false, error: 'Payment system not configured' },
-        { status: 500 }
-      )
-    }
-
     const body = await req.json()
     const { userId, email, planId, name, trial } = body
 
@@ -59,69 +14,59 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Get Razorpay plan ID
-    const razorpayPlanId = RAZORPAY_PLANS[planId]
-    if (!razorpayPlanId) {
+    // Validate plan exists
+    if (!getRazorpayPlanId(planId)) {
       return NextResponse.json(
         { success: false, error: `Invalid plan ID: ${planId}` },
         { status: 400 }
       )
     }
 
-    console.log('[Subscriptions] Creating subscription:', {
-      userId,
-      email,
+    console.log('[Subscriptions] Creating subscription:', { userId, email, planId, trial })
+
+    const subscription = await createSubscription({
       planId,
-      razorpayPlanId,
+      customerEmail: email,
+      customerName: name,
+      userId,
       trial,
     })
 
-    // Create subscription on Razorpay
-    let subscription
-    try {
-      subscription = await razorpay.subscriptions.create({
-        plan_id: razorpayPlanId,
-        customer_notify: 1,
-        total_count: 12, // 12 months
-        quantity: 1,
-        start_at: trial
-          ? Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // Start after 7 days for trial
-          : undefined,
-        notes: {
-          userId,
-          email,
-          name,
-          planId,
-          isTrial: trial ? 'true' : 'false',
-        },
-      })
-    } catch (rzpError: any) {
-      console.error('[Subscriptions] Razorpay API error:', rzpError)
-      console.error('[Subscriptions] Error details:', JSON.stringify(rzpError, null, 2))
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Razorpay error: ${rzpError.error?.description || rzpError.message || 'Unknown error'}`,
-          details: rzpError.error || rzpError,
-        },
-        { status: 500 }
-      )
-    }
-
     console.log('[Subscriptions] Created:', subscription.id)
+
+    // Persist subscription to database if user exists
+    try {
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (user) {
+        await prisma.subscription.upsert({
+          where: { userId: user.id },
+          create: {
+            userId: user.id,
+            razorpaySubscriptionId: subscription.id,
+            planId,
+            status: 'pending',
+          },
+          update: {
+            razorpaySubscriptionId: subscription.id,
+            planId,
+            status: 'pending',
+          },
+        })
+      }
+    } catch (dbError) {
+      // Non-fatal: subscription created on Razorpay, DB save failed
+      console.error('[Subscriptions] DB save failed (non-fatal):', dbError)
+    }
 
     return NextResponse.json({
       success: true,
       subscriptionId: subscription.id,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Subscriptions] Create error:', error)
+    const message = error?.error?.description || error?.message || 'Internal server error'
     return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'Internal server error',
-      },
+      { success: false, error: message, details: error?.error || undefined },
       { status: 500 }
     )
   }
