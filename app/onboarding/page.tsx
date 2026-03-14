@@ -235,7 +235,9 @@ function OnboardingContent() {
             }),
           })
           const verifyData = await verifyRes.json()
-          if (verifyData.verified && verifyData.provisioned) {
+          if (verifyData.verified) {
+            // Payment verified — go to success even if provisioning failed
+            // (provisioning can be retried from dashboard)
             setCurrentStep(5)
             store.reset()
           } else {
