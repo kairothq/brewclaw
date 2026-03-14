@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-// Step labels constant
+// Step labels constant — Pricing first so landing CTA flows naturally
 export const STEP_LABELS = {
-  1: 'Sign In',
-  2: 'AI Provider',
-  3: 'Telegram',
-  4: 'Choose Plan'
+  1: 'Choose Plan',
+  2: 'Sign In',
+  3: 'AI Provider',
+  4: 'Telegram'
 } as const
 
 // Helper function to get step label
