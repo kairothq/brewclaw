@@ -9,8 +9,6 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
 
   // Protected routes that require authentication
-  // Onboarding is NOT protected — pricing (step 1) must be visible without auth.
-  // Auth is handled within the onboarding page at step 2.
   const protectedRoutes = ['/dashboard', '/settings']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 

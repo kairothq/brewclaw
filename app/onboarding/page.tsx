@@ -14,14 +14,12 @@ import { StepPricing } from "@/components/onboard/step-pricing"
 import { Button } from "@/components/ui/button"
 import type { ProviderType, ProviderCredentials } from "@/types/ai-provider"
 
-// Extend window type for Razorpay
 declare global {
   interface Window {
     Razorpay: any
   }
 }
 
-// Testimonial data
 const testimonial = {
   quote: "Brewclaw transformed how we serve our customers. The ordering system is incredibly intuitive and our staff loves it.",
   author: "Maria Rodriguez",
@@ -46,24 +44,15 @@ function Logo() {
   )
 }
 
-/**
- * Left panel with testimonial - shown on Sign In step
- */
 function LeftPanel() {
   return (
     <div className="hidden lg:flex lg:w-1/2 lg:sticky lg:top-0 lg:h-screen bg-gradient-to-br from-zinc-900 via-zinc-950 to-zinc-900 relative overflow-hidden">
-      {/* Animated gradient orbs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
       </div>
-
-      {/* Content */}
       <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-        {/* Logo */}
         <Logo />
-
-        {/* Main content - Testimonial */}
         <div className="space-y-8">
           <blockquote className="space-y-4">
             <p className="text-2xl font-medium leading-relaxed text-white text-balance">
@@ -79,8 +68,6 @@ function LeftPanel() {
               </div>
             </footer>
           </blockquote>
-
-          {/* Stats */}
           <div className="flex gap-8 pt-8 border-t border-zinc-800">
             {stats.map((stat) => (
               <div key={stat.label}>
@@ -90,8 +77,6 @@ function LeftPanel() {
             ))}
           </div>
         </div>
-
-        {/* Empty footer space */}
         <div />
       </div>
     </div>
@@ -99,13 +84,12 @@ function LeftPanel() {
 }
 
 /*
- * ONBOARDING FLOW (Phase 16):
- *   Step 1: Choose Plan (Pricing)  — full-width centered
- *   Step 2: Sign In                — split layout with testimonial
- *   Step 3: AI Provider Selection  — full-width centered
- *   Step 4: Telegram Setup         — full-width centered
- *   Step 5: Payment + Success      — (implicit, triggered from step 1 selection for paid plans,
- *                                     or after step 4 for free plan provisioning)
+ * ONBOARDING FLOW:
+ *   Step 1: Sign In           — split layout with testimonial
+ *   Step 2: AI Provider       — full-width centered
+ *   Step 3: Telegram Setup    — full-width centered
+ *   Step 4: Choose Plan       — full-width centered (payment triggers here)
+ *   Step 5: Success           — full-width centered
  */
 type Step = 1 | 2 | 3 | 4 | 5
 
@@ -123,20 +107,21 @@ function OnboardingContent() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [paymentError, setPaymentError] = useState('')
 
-  // Track entry point from pricing section on landing page (run once on mount)
+  // Track entry point from pricing section on landing page
   useEffect(() => {
     const plan = searchParams.get("plan")
     if (plan) {
       store.setFromPricing(true, plan)
+      setSelectedPlan(plan)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  // Auto-advance past Sign In (step 2) if already authenticated
+  // Auto-advance past Sign In if already authenticated
   useEffect(() => {
-    if (status === "authenticated" && currentStep === 2) {
+    if (status === "authenticated" && currentStep === 1) {
       setDirection("forward")
-      setCurrentStep(3)
+      setCurrentStep(2)
     }
   }, [status, currentStep])
 
@@ -153,86 +138,49 @@ function OnboardingContent() {
     }
   }, [])
 
-  // Slide animation variants
   const slideVariants = {
-    enter: (direction: "forward" | "back") => ({
-      x: direction === "forward" ? 100 : -100,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: "forward" | "back") => ({
-      x: direction === "forward" ? -100 : 100,
-      opacity: 0,
-    }),
+    enter: (dir: "forward" | "back") => ({ x: dir === "forward" ? 100 : -100, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: "forward" | "back") => ({ x: dir === "forward" ? -100 : 100, opacity: 0 }),
   }
 
-  // Navigation handlers
   const handleNext = () => {
     setDirection("forward")
-    if (currentStep < 5) {
-      setCurrentStep((currentStep + 1) as Step)
-    }
+    if (currentStep < 5) setCurrentStep((currentStep + 1) as Step)
   }
 
   const handleBack = () => {
-    // Don't go back past Sign In if authenticated (skip back to pricing)
-    if (currentStep === 3 && status === "authenticated") {
-      setDirection("back")
-      setCurrentStep(1)
-      return
-    }
+    if (currentStep === 2 && status === "authenticated") return
     setDirection("back")
-    if (currentStep > 1) {
-      setCurrentStep((currentStep - 1) as Step)
-    }
+    if (currentStep > 1) setCurrentStep((currentStep - 1) as Step)
   }
 
-  // Step 1: Plan selected — save and move to sign in
-  const handlePlanSelected = (planId: string, cycle: 'monthly' | 'yearly') => {
-    setSelectedPlan(planId)
-    setBillingCycle(cycle)
-    store.setFromPricing(true, planId)
-    handleNext() // → Step 2 (Sign In) or auto-skip to Step 3 if already authed
-  }
-
-  // Step 3: AI provider selected
-  const handleAISelectionContinue = (
-    provider: ProviderType,
-    credentials?: ProviderCredentials
-  ) => {
-    store.setStepData(3, {
+  // Step 2: AI provider selected
+  const handleAISelectionContinue = (provider: ProviderType, credentials?: ProviderCredentials) => {
+    store.setStepData(2, {
       aiProvider: provider,
       hasValidatedCredentials: credentials?.validated || false,
     })
-    handleNext() // → Step 4 (Telegram)
+    handleNext()
   }
 
-  // Step 4: Telegram setup done — trigger payment or provision
+  // Step 3: Telegram setup done
   const handleTelegramContinue = (data: { botToken: string; userId: string }) => {
-    store.setStepData(4, {
+    store.setStepData(3, {
       botToken: data.botToken,
       telegramUserId: data.userId,
     })
-    // Now trigger payment flow
-    triggerPayment()
+    handleNext() // → Step 4 (Pricing/Payment)
   }
 
-  // Step 4 skip: skip Telegram, go to payment
-  const handleTelegramSkip = () => {
-    triggerPayment()
-  }
-
-  // Payment flow — called after all setup steps are done
-  const triggerPayment = async () => {
-    const planId = selectedPlan || store.selectedPlan || 'free'
+  // Step 4: Plan selected → trigger payment
+  const handlePlanSelected = async (planId: string, cycle: 'monthly' | 'yearly') => {
+    setSelectedPlan(planId)
+    setBillingCycle(cycle)
     setIsProcessingPayment(true)
     setPaymentError('')
 
     try {
-      // Free plan: provision directly (no payment)
       if (planId === 'free') {
         setCurrentStep(5)
         setIsProcessingPayment(false)
@@ -240,7 +188,6 @@ function OnboardingContent() {
         return
       }
 
-      // Create subscription
       const tempUserId = crypto.randomUUID().replace(/-/g, '').substring(0, 16)
 
       const subRes = await fetch('/api/subscriptions/create', {
@@ -251,8 +198,8 @@ function OnboardingContent() {
           email: store.email || session?.user?.email,
           planId,
           name: session?.user?.name || 'User',
-          trial: false
-        })
+          trial: false,
+        }),
       })
 
       const subData = await subRes.json()
@@ -263,21 +210,14 @@ function OnboardingContent() {
         return
       }
 
-      // Open Razorpay checkout
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         subscription_id: subData.subscriptionId,
         name: 'BrewClaw',
         description: `${planId} Plan`,
         image: '/logo.png',
-        method: {
-          upi: true,
-          card: true,
-          netbanking: true,
-          wallet: false,
-        },
+        method: { upi: true, card: true, netbanking: true, wallet: false },
         handler: async function (response: any) {
-          // Verify and provision
           const verifyRes = await fetch('/api/subscriptions/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -290,13 +230,11 @@ function OnboardingContent() {
                 telegramUserId: store.telegramUserId,
                 aiProvider: store.aiProvider,
                 email: store.email || session?.user?.email,
-                plan: planId
-              }
-            })
+                plan: planId,
+              },
+            }),
           })
-
           const verifyData = await verifyRes.json()
-
           if (verifyData.verified && verifyData.provisioned) {
             setCurrentStep(5)
             store.reset()
@@ -305,16 +243,14 @@ function OnboardingContent() {
           }
           setIsProcessingPayment(false)
         },
-        prefill: {
-          email: store.email || session?.user?.email
-        },
+        prefill: { email: store.email || session?.user?.email },
         theme: { color: '#f97316' },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setPaymentError('Payment was cancelled')
             setIsProcessingPayment(false)
-          }
-        }
+          },
+        },
       }
 
       const razorpay = new window.Razorpay(options)
@@ -326,21 +262,14 @@ function OnboardingContent() {
     }
   }
 
-  // Handle logout
   const handleLogout = async () => {
     store.reset()
     await signOut({ callbackUrl: "/onboarding" })
   }
 
-  // Render current step content
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        // Step 1: Choose Plan (Pricing)
-        return <StepPricing onContinue={handlePlanSelected} onBack={() => router.push('/')} />
-
-      case 2:
-        // Step 2: Sign In
         if (status === "loading") {
           return (
             <div className="flex items-center justify-center py-12">
@@ -348,40 +277,36 @@ function OnboardingContent() {
             </div>
           )
         }
-        if (status === "authenticated") {
-          return null // Will auto-advance via useEffect
-        }
+        if (status === "authenticated") return null
         return <StepSignIn />
 
-      case 3:
-        // Step 3: AI Provider Selection
+      case 2:
         return (
           <StepAISelection
             onContinue={handleAISelectionContinue}
+            onBack={status === "authenticated" ? undefined : handleBack}
+          />
+        )
+
+      case 3:
+        return (
+          <StepTelegram
+            onContinue={handleTelegramContinue}
+            onSkip={() => handleNext()}
             onBack={handleBack}
           />
         )
 
       case 4:
-        // Step 4: Telegram Setup
-        return (
-          <StepTelegram
-            onContinue={handleTelegramContinue}
-            onSkip={handleTelegramSkip}
-            onBack={handleBack}
-          />
-        )
+        return <StepPricing onContinue={handlePlanSelected} onBack={handleBack} />
 
       case 5:
-        // Success
         return (
           <div className="text-center">
             <div className="text-6xl mb-6">🎉</div>
             <h2 className="text-2xl font-bold mb-2 text-white">You&apos;re Live!</h2>
             <p className="text-zinc-400 mb-8">Your AI assistant is ready to chat.</p>
-            {paymentError && (
-              <p className="text-red-400 text-sm mb-4">{paymentError}</p>
-            )}
+            {paymentError && <p className="text-red-400 text-sm mb-4">{paymentError}</p>}
             <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
           </div>
         )
@@ -391,26 +316,18 @@ function OnboardingContent() {
     }
   }
 
-  // Step 2 (Sign In) uses split layout with testimonial panel
-  if (currentStep === 2) {
+  // Step 1 (Sign In) uses split layout with testimonial panel
+  if (currentStep === 1) {
     return (
       <div className="min-h-screen bg-zinc-950 flex">
-        {/* Left testimonial panel */}
         <LeftPanel />
-
-        {/* Right content area */}
         <main className="flex-1 flex flex-col relative">
-          {/* Mobile header with logo */}
           <div className="lg:hidden p-6 pb-0">
             <Logo />
           </div>
-
-          {/* Progress indicator - centered at top */}
           <div className="pt-8 px-8 flex flex-col items-center">
-            <StepProgress currentStep={currentStep as 1 | 2 | 3 | 4} max={4} />
+            <StepProgress currentStep={1} max={4} />
           </div>
-
-          {/* Step content */}
           <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
@@ -420,10 +337,7 @@ function OnboardingContent() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
+                transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
                 className="w-full max-w-md"
               >
                 {renderStep()}
@@ -438,31 +352,24 @@ function OnboardingContent() {
   // All other steps: full-width centered layout
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col relative">
-      {/* Logo - top left */}
       <div className="absolute top-8 left-8">
         <Logo />
       </div>
 
-      {/* Progress indicator - centered at top (hide on success step) */}
       {currentStep !== 5 && (
         <div className="pt-8 px-8 flex flex-col items-center">
           <StepProgress currentStep={currentStep as 1 | 2 | 3 | 4} max={4} />
         </div>
       )}
 
-      {/* Logout button - top right */}
       {status === "authenticated" && (
         <div className="absolute top-8 right-8">
-          <button
-            onClick={handleLogout}
-            className="text-sm text-zinc-500 hover:text-white transition-colors"
-          >
+          <button onClick={handleLogout} className="text-sm text-zinc-500 hover:text-white transition-colors">
             Log out
           </button>
         </div>
       )}
 
-      {/* Centered content */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -472,18 +379,13 @@ function OnboardingContent() {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
-            className={currentStep === 1 ? "w-full max-w-6xl" : "w-full max-w-4xl"}
+            transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+            className={currentStep === 4 ? "w-full max-w-6xl" : "w-full max-w-4xl"}
           >
             {renderStep()}
-            {/* Payment error shown on step 4 */}
             {paymentError && currentStep === 4 && (
               <p className="text-red-400 text-sm text-center mt-4">{paymentError}</p>
             )}
-            {/* Loading indicator during payment */}
             {isProcessingPayment && (
               <div className="flex items-center justify-center mt-4 gap-2 text-zinc-400">
                 <div className="w-4 h-4 border-2 border-zinc-600 border-t-white rounded-full animate-spin" />

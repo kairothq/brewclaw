@@ -28,12 +28,12 @@ const safeSessionStorage: StateStorage = {
   },
 }
 
-// Step labels constant — Pricing first so landing CTA flows naturally
+// Step labels
 export const STEP_LABELS = {
-  1: 'Choose Plan',
-  2: 'Sign In',
-  3: 'AI Provider',
-  4: 'Telegram'
+  1: 'Sign In',
+  2: 'AI Provider',
+  3: 'Telegram',
+  4: 'Choose Plan'
 } as const
 
 // Helper function to get step label

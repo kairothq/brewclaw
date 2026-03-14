@@ -9,7 +9,7 @@ interface StatusMessage {
 }
 
 const statusMessages: StatusMessage[] = [
-  { text: "Built by OpenClaw", href: "https://openclaw.com" },
+  { text: "Built by BrewClaw", href: "https://brewclaw.com" },
   { text: "Now accepting Batch 2 applications (37 seats left)" },
   { text: "1,247 assistants deployed this month" },
   { text: "New: Skills Store now live" },
