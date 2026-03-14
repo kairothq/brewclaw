@@ -1,5 +1,32 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+
+// Safe storage that falls back to in-memory when sessionStorage is blocked (Brave shields, etc.)
+const memoryStorage = new Map<string, string>()
+
+const safeSessionStorage: StateStorage = {
+  getItem: (name) => {
+    try {
+      return sessionStorage.getItem(name)
+    } catch {
+      return memoryStorage.get(name) ?? null
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      sessionStorage.setItem(name, value)
+    } catch {
+      memoryStorage.set(name, value)
+    }
+  },
+  removeItem: (name) => {
+    try {
+      sessionStorage.removeItem(name)
+    } catch {
+      memoryStorage.delete(name)
+    }
+  },
+}
 
 // Step labels constant — Pricing first so landing CTA flows naturally
 export const STEP_LABELS = {
@@ -90,7 +117,7 @@ export const useOnboardingStore = create<OnboardingState>()(
     }),
     {
       name: 'brewclaw-onboarding',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => safeSessionStorage),
     }
   )
 )
