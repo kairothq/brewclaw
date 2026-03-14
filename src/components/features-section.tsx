@@ -284,7 +284,7 @@ export function FeaturesSection() {
             </h2>
           </div>
           <p className="text-zinc-500 max-w-sm text-sm md:text-right">
-            OpenClaw, ClawdBot, and MoltBot — configured and connected. No terminal commands, no config files.
+            BrewClaw, ClawdBot, and MoltBot — configured and connected. No terminal commands, no config files.
           </p>
         </div>
 
