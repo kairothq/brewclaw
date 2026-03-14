@@ -64,11 +64,7 @@ interface StepPricingProps {
 export function StepPricing({ onContinue, onBack }: StepPricingProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
-  console.log('[StepPricing] Component rendered, onContinue:', typeof onContinue)
-
   const handlePlanClick = (planId: string) => {
-    console.log('[StepPricing] Button clicked:', planId, billingCycle)
-    console.log('[StepPricing] Calling onContinue...')
     onContinue(planId, billingCycle)
   }
 

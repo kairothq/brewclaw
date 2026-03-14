@@ -201,12 +201,6 @@ function OnboardingContent() {
 
   // Step 4 completion handler - Payment
   const handlePlanSelected = async (planId: string, cycle: 'monthly' | 'yearly') => {
-    console.log('[Payment] ==================== PLAN SELECTED ====================')
-    console.log('[Payment] Plan ID:', planId)
-    console.log('[Payment] Billing Cycle:', cycle)
-    console.log('[Payment] Current step:', currentStep)
-    console.log('[Payment] Session:', session)
-    console.log('[Payment] =======================================================')
     setSelectedPlan(planId)
     setBillingCycle(cycle)
     setIsProcessingPayment(true)
@@ -221,20 +215,8 @@ function OnboardingContent() {
         return
       }
 
-      // TEST MODE: Bypass payment for testing (remove this in production!)
-      const isTestMode = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.includes('test')
-      if (isTestMode && confirm('⚠️ TEST MODE: Skip payment and go directly to success?\n\nThis should be removed in production.')) {
-        console.log('[Payment] TEST MODE: Skipping payment flow')
-        setCurrentStep(5)
-        setIsProcessingPayment(false)
-        store.reset()
-        return
-      }
-
       // Create subscription
       const tempUserId = crypto.randomUUID().replace(/-/g, '').substring(0, 16)
-
-      console.log('[Payment] Creating subscription for:', { planId, email: store.email || session?.user?.email })
 
       const subRes = await fetch('/api/subscriptions/create', {
         method: 'POST',
@@ -249,16 +231,12 @@ function OnboardingContent() {
       })
 
       const subData = await subRes.json()
-      console.log('[Payment] Subscription response:', subData)
 
       if (!subData.success) {
-        console.error('[Payment] Subscription creation failed:', subData.error)
         setPaymentError(subData.error || 'Failed to create subscription')
         setIsProcessingPayment(false)
         return
       }
-
-      console.log('[Payment] Opening Razorpay modal...')
 
       // Open Razorpay
       const options = {
