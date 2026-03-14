@@ -64,6 +64,15 @@ Requirements for merging 2openclaw into brewclaw as a unified product.
 - [ ] **BRAND-02**: 301 redirects from 2openclaw.vercel.app to brewclaw.com
 - [ ] **BRAND-03**: Consistent dark theme styling across landing, auth, onboarding, dashboard
 
+### Dashboard v2
+
+- [ ] **DASH-07**: Chat-first dashboard with conversation threads, pinned threads, and search
+- [ ] **DASH-08**: Credits balance display with daily/monthly spend breakdown and low-balance warning
+- [ ] **DASH-09**: Credits top-up via Razorpay without leaving the dashboard (slide-out panel)
+- [ ] **DASH-10**: Settings modal with tabs for Models, Providers, Channels, Skills
+- [ ] **DASH-11**: Provider management — connect/disconnect AI providers with API keys or OAuth
+- [ ] **DASH-12**: Sidebar with credits, settings link, restart/restore controls, and user profile
+
 ## v2.1 Requirements (Future)
 
 Deferred to next milestone.
